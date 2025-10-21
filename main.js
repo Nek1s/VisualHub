@@ -6,6 +6,7 @@ const createWindow = () => {
   const mainWindow = new BrowserWindow({
     width: 1200,
     height: 800,
+    autoHideMenuBar: true, // Убрал менюбар
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'), // Подключаем preload скрипт
       contextIsolation: true, // Включено для безопасности
