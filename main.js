@@ -14,9 +14,14 @@ const createWindow = () => {
     }
   });
 
-  mainWindow.loadFile('index.html');
+  // Запуск приложения с билда
+  mainWindow.loadFile(path.join(__dirname, './build/index.html'));
+  
   // Для разработки можно раскомментировать следующую строку, чтобы открыть инструменты разработчика
   // mainWindow.webContents.openDevTools();
+
+  // Запуск приложения с хоста реакта. Сначала запустить реакт, потом electron.
+  // mainWindow.loadURL('http://localhost:3000') 
 };
 
 app.whenReady().then(() => {

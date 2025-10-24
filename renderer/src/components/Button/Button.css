@@ -1,0 +1,35 @@
+.button {
+  background-color: #232323;
+  color: #ffffff;
+  width: 240px;
+  height: 100px;
+  margin: 0 auto;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  outline: none;
+  border: 1px solid #3D3D3D;
+}
+
+.button:active {
+  transform: translateY(10px);
+}
+
+.button:hover {
+  background-color: #2C2C2C;
+  color: #fff;
+}
+
+.button--disabled {
+  background-color: #6c757d;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.button--disabled:hover {
+  background-color: #6c757d;
+  transform: none;
+  box-shadow: none;
+}
