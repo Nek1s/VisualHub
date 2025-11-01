@@ -10,13 +10,18 @@ const createWindow = () => {
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'), // Подключаем preload скрипт
       contextIsolation: true, // Включено для безопасности
-      nodeIntegration: false, // Отключено для безопасности
+      nodeIntegration: true, // Отключено для безопасности
     }
   });
 
-  mainWindow.loadFile('index.html');
-  // Для разработки можно раскомментировать следующую строку, чтобы открыть инструменты разработчика
+  // Запуск приложения с билда
+  mainWindow.loadFile(path.join(__dirname, './build/index.html'));
+  
+  // Режим разработчика, просто F12 как в браузере будет открываться в реакте, удобно когда ничего не грузит.
   // mainWindow.webContents.openDevTools();
+
+  // Запуск приложения с реакта. Сначала запустить реакт, потом electron
+  // mainWindow.loadURL('http://localhost:3000') 
 };
 
 app.whenReady().then(() => {

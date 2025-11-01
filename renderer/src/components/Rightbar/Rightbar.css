@@ -1,0 +1,9 @@
+.Rightbar {
+  height: 100%;
+  width: 230px;
+  text-align: left;
+  padding-left: 25px;
+
+  background-color: #232323;
+  color: #fff;
+}
