@@ -1,85 +1,9 @@
 .Leftbar {
-  height: 100vh;
-  min-width: 230px;
+  height: 100%;
+  width: 230px;
   text-align: left;
-  
-  padding-left: 20px;
-  padding-right: 20px;
+  padding-left: 25px;
 
   background-color: #232323;
-  border: 1px solid #3D3D3D;
   color: #fff;
-  gap: 50px;
-}
-
-/* Контейнер для списка папок */
-.leftbar__folders {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-  margin-top:50px;
-}
-
-/* Разделитель между системными и пользовательскими папками */
-.leftbar__divider {
-  height: 50px; /* Расстояние 50px */
-  width: 100%;
-}
-
-/* Контекстное меню */
-.context-menu {
-  background-color: #2a2a2a;
-  border: 1px solid #444;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-  overflow: hidden;
-  animation: contextMenuAppear 0.1s ease-out;
-}
-
-@keyframes contextMenuAppear {
-  from {
-    opacity: 0;
-    transform: scale(0.95);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
-/* Элемент меню */
-.context-menu__item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  width: 100%;
-  padding: 8px 10px 8px 8px;
-  border: none;
-  background: none;
-  color: #fff;
-  font-size: 14px;
-  font-family: inherit;
-  cursor: pointer;
-  transition: background-color 0.2s ease;
-  text-align: left;
-}
-
-.context-menu__item:hover {
-  background-color: #dc3545;
-  color: white;
-}
-
-.context-menu__item-icon {
-  font-size: 14px;
-  width: 16px;
-  text-align: center;
-}
-
-/* Адаптивность */
-@media (max-width: 768px) {
-  .context-menu__item {
-    padding: 14px 16px;
-    font-size: 16px;
-    min-width: 140px;
-  }
 }

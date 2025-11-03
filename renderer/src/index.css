@@ -7,14 +7,7 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-::selection {
-  background-color: rgb(255, 255, 255); /* Цвет фона */
-  color: #232323; /* Цвет текста */
-}
-
-
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
-

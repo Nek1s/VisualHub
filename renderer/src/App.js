@@ -1,16 +1,18 @@
 import './App.css';
+import Button from "./components/Button/Button";
 import Leftbar from "./components/Leftbar/Leftbar";
 import Rightbar from "./components/Rightbar/Rightbar";
-import FileUpload from './components/FileUpload/FileUpload';
+
 
 
 function App() {
+  const handleClick = () => {
+    console.log('Кнопка нажата!');
+  };
   return (
     <div className="App">
       <Leftbar />
-      <div className="app-content">
-        <FileUpload />
-      </div>
+      <Button onClick={handleClick}>Загрузить изображение</Button>
       <Rightbar />
     </div>
   );
