@@ -15,13 +15,13 @@ const createWindow = () => {
   });
 
   // Запуск приложения с билда
-  mainWindow.loadFile(path.join(__dirname, './build/index.html'));
+  // mainWindow.loadFile(path.join(__dirname, './build/index.html'));
   
   // Режим разработчика, просто F12 как в браузере будет открываться в реакте, удобно когда ничего не грузит.
   // mainWindow.webContents.openDevTools();
 
   // Запуск приложения с реакта. Сначала запустить реакт, потом electron
-  // mainWindow.loadURL('http://localhost:3000') 
+  mainWindow.loadURL('http://localhost:3000') 
 };
 
 app.whenReady().then(() => {
