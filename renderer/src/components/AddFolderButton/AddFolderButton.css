@@ -1,0 +1,49 @@
+.AddFolderButton {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 4px;
+  margin-top: 20px;
+
+  border: 1px solid #3D3D3D;
+  border-radius: 8px;
+  background-color: #232323;
+  color: #ffffff;
+
+  font-size: 14px;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  width: 50%;
+  box-sizing: border-box;
+}
+
+.AddFolderButton:hover {
+  background-color: #363636;
+}
+
+.AddFolderButton:active {
+  background-color: #2a2a2a;
+  transform: translateY(3px);
+}
+
+.AddFolderButton:disabled {
+  background-color: #1a1a1a;
+  color: #666;
+  cursor: not-allowed;
+}
+
+.AddFolderButton__icon {
+  font-size: 16px;
+  font-weight: 600;
+  width: 20px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.AddFolderButton__label {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
