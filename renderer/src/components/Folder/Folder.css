@@ -1,0 +1,95 @@
+/* Основные стили папки */
+.folder {
+  display: flex;
+  font-family: Arial, sans-serif;
+  width: 100%;
+  height: 40px;
+}
+
+/* Состояние редактирования */
+.folder--editing {
+  min-width: 150px;
+}
+
+/* Контейнеры содержимого */
+.folder__content,
+.folder__edit-container {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  gap: 12px;
+  padding: 12px 10px;
+  border-radius: 8px;
+  background-color: #232323;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+}
+
+.folder__edit-container {
+  cursor: default;
+  background-color: #363636;
+  box-shadow: inset 0 0 0 1px #545454;
+}
+
+.folder__content:hover {
+  background-color: #363636;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Иконка папки */
+.folder__icon {
+  font-size: 16px;
+  flex-shrink: 0;
+  width: 20px;
+  text-align: center;
+  color: #ffffff;
+}
+
+/* Заголовок папки */
+.folder__title {
+  cursor: pointer;
+  margin: 0;
+  font-size: 14px;
+  font-weight: 500;
+  color: #ffffff;
+  word-break: break-word;
+  user-select: none;
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Счетчик элементов */
+.folder__count {
+  color: #9B9B9B;
+  font-size: 14px;
+  font-weight: 500;
+  min-width: 24px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+/* Поле ввода */
+.folder__input {
+  width: 100%;
+  border: none;
+  background: transparent;
+  font-size: 14px;
+  font-weight: 500;
+  font-family: inherit;
+  color: #ffffff;
+  outline: none;
+  padding: 0;
+  margin: 0;
+}
+
+.folder__input::placeholder {
+  color: #6c757d;
+  font-weight: normal;
+}
+
+/* Состояния поля ввода */
+.folder__input:focus {
+  border-color: #545454;
+}
