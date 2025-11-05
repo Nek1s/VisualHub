@@ -4,10 +4,10 @@
   "description": "Десктоп-приложение для управления и редактирования изображений",
   "main": "src/main/main.js",
   "scripts": {
-  "start": "electron .",
-  "dev": "npm run build && npm run start",
-  "rebuild": "npx electron-rebuild -f -w better-sqlite3",
-  "setup": "npm install && npm run rebuild"
+    "start": "electron .",
+    "dev": "npm run build && npm run start",
+    "rebuild": "npx electron-rebuild -f -w better-sqlite3",
+    "setup": "npm install && npm run rebuild"
   },
   "author": "Your-Team",
   "license": "MIT",
@@ -19,6 +19,8 @@
   },
   "dependencies": {
     "better-sqlite3": "^12.4.1",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
     "sharp": "^0.34.4",
     "sqlite3": "^5.1.7"
   }

@@ -55,4 +55,9 @@ CREATE TABLE IF NOT EXISTS image_tags (
 )
 `).run();
 
+db.prepare(`
+  INSERT OR IGNORE INTO folders (id, name) VALUES 
+  (1, 'All'), (2, 'Uncategorized'), (3, 'Trash')
+`).run();
+
 module.exports = db;
