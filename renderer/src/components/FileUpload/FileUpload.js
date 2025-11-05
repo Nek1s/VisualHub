@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import './FileUpload.css';
 
-const FileUpload = () => {
+const FileUpload = ({ folderId = 2, onUploadComplete }) => {
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [isDragging, setIsDragging] = useState(false);
   const [uploadProgress, setUploadProgress] = useState({});
@@ -64,52 +64,61 @@ const FileUpload = () => {
     fileInputRef.current?.click();
   };
 
-  // Симуляция загрузки файлов
-  const simulateFileUpload = async (files) => {
-    console.log('🚀 Начало автоматической загрузки файлов...');
-    
-    const newProgress = {};
-    files.forEach((_, index) => {
-      const globalIndex = selectedFiles.length + index;
-      newProgress[globalIndex] = 0;
-    });
-    setUploadProgress(prev => ({...prev, ...newProgress}));
+const simulateFileUpload = async (files) => {
+  console.log('Начало автоматической загрузки файлов...');
+  
+  const newProgress = {};
+  files.forEach((_, index) => {
+    const globalIndex = selectedFiles.length + index;
+    newProgress[globalIndex] = 0;
+  });
+  setUploadProgress(prev => ({...prev, ...newProgress}));
 
-    // Симуляция прогресса загрузки для каждого файла
-    for (let i = 0; i < files.length; i++) {
-      const globalIndex = selectedFiles.length + i;
-      const file = files[i];
-      
-      console.log(`📤 Загрузка файла: ${file.name}`);
-      
-      for (let progress = 0; progress <= 100; progress += 20) {
-        await new Promise(resolve => setTimeout(resolve, 150));
-        setUploadProgress(prev => ({
-          ...prev,
-          [globalIndex]: progress
-        }));
-        
-        // Логируем прогресс каждые 40%
-        if (progress % 40 === 0 && progress > 0) {
-          console.log(`  ↳ Прогресс загрузки "${file.name}": ${progress}%`);
+  for (let i = 0; i < files.length; i++) {
+    const globalIndex = selectedFiles.length + i;
+    const file = files[i];
+    
+    // === РЕАЛЬНАЯ ЗАГРУЗКА ===
+    try {
+        const buffer = await file.arrayBuffer();
+        const array = new Uint8Array(buffer);
+        const result = await window.electronAPI.uploadImage(array, file.name, folderId);
+
+        if (result.success) {
+          console.log(`Успешно загружено: ${file.name} (ID: ${result.id})`);
+
+          // Обновляем галерею
+          if (window.electronAPI?.getImages && typeof onUploadComplete === 'function') {
+            const images = await window.electronAPI.getImages(folderId);
+            onUploadComplete(images);
+          }
+        } else {
+          console.error(`Ошибка загрузки: ${result.error}`);
         }
+      } catch (err) {
+        console.error(`Ошибка API:`, err);
       }
-      
-      console.log(`✅ Файл успешно загружен: ${file.name}`);
-    }
+      // ---------- КОНЕЦ ЗАГРУЗКИ ----------
 
-    console.log('🎉 Все файлы автоматически загружены!');
-    console.log('📈 Статистика загрузки:');
-    files.forEach((file, index) => {
-      console.log(`  ${index + 1}. ${file.name} - ${formatFileSize(file.size)} - ✅ Успешно`);
-    });
+    // Твоя старая симуляция прогресса (оставляем)
+    for (let progress = 0; progress <= 100; progress += 20) {
+      await new Promise(resolve => setTimeout(resolve, 150));
+      setUploadProgress(prev => ({
+        ...prev,
+        [globalIndex]: progress
+      }));
+    }
     
-    // Очищаем прогресс через 2 секунды после завершения
-    setTimeout(() => {
-      setUploadProgress({});
-      console.log('🔄 Прогресс загрузки очищен');
-    }, 2000);
-  };
+    console.log(`Файл успешно загружен: ${file.name}`);
+  }
+
+  console.log('Все файлы автоматически загружены!');
+
+  setTimeout(() => {
+    setUploadProgress({});
+    console.log('Прогресс загрузки очищен');
+  }, 2000);
+};
 
   // Форматирование размера файла
   const formatFileSize = (bytes) => {
