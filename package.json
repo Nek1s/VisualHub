@@ -2,14 +2,24 @@
   "name": "visualhub",
   "version": "1.0.0",
   "description": "Десктоп-приложение для управления и редактирования изображений",
-  "main": "main.js",
+  "main": "src/main/main.js",
   "scripts": {
-    "start": "electron .",
-    "test": "echo \"Error: no test specified\" && exit 1"
+  "start": "electron .",
+  "dev": "npm run build && npm run start",
+  "rebuild": "npx electron-rebuild -f -w better-sqlite3",
+  "setup": "npm install && npm run rebuild"
   },
   "author": "Your-Team",
   "license": "MIT",
   "devDependencies": {
-    "electron": "^38.3.0"
+    "@types/node": "^24.10.0",
+    "electron": "^38.5.0",
+    "electron-rebuild": "^3.2.9",
+    "typescript": "^5.9.3"
+  },
+  "dependencies": {
+    "better-sqlite3": "^12.4.1",
+    "sharp": "^0.34.4",
+    "sqlite3": "^5.1.7"
   }
 }
