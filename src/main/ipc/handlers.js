@@ -49,3 +49,20 @@ ipcMain.handle('get-image-url', (event, imagePath) => {
   console.log('URL для:', imagePath);
   return `file://${path.resolve(imagePath)}`;
 });
+
+ipcMain.handle('add-folder', async (event, name) => {
+  console.log('Создаём папку:', name);
+  const result = db.prepare('INSERT INTO folders (name) VALUES (?)').run(name);
+  const id = result.lastInsertRowid;
+  return { id, name };
+});
+
+ipcMain.handle('get-folders', async () => {
+  return db.prepare(`
+    SELECT f.*, COUNT(i.id) as count
+    FROM folders f
+    LEFT JOIN images i ON i.folderId = f.id OR (f.id = 1 AND i.folderId IS NOT NULL)
+    GROUP BY f.id
+    ORDER BY f.id
+  `).all();
+});

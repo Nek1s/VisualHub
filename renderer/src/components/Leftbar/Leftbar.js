@@ -7,12 +7,7 @@ class Leftbar extends React.Component {
   constructor(props) {
     super(props)
     this.state = {
-      folders: [
-        { id: 1, name: "All", count: 15, icon: "📁", editable: false },
-        { id: 2, name: "Uncategorized", count: 128, icon: "🧷", editable: false },
-        { id: 3, name: "Trash", count: 42, icon: "🗑️", editable: false },
-      ],
-      nextId: 4,
+      folders: [],
       editingFolderId: null,
       contextMenu: {
         visible: false,
@@ -29,15 +24,97 @@ class Leftbar extends React.Component {
     this.handleContextMenu = this.handleContextMenu.bind(this);
     this.handleDeleteFolder = this.handleDeleteFolder.bind(this);
     this.handleClickOutside = this.handleClickOutside.bind(this);
+    this.loadFolders = this.loadFolders.bind(this);
+    this.handleDropOnFolder = this.handleDropOnFolder.bind(this);
+    this.onFolderClick = this.onFolderClick.bind(this);
   }
 
   componentDidMount() {
+    this.loadFolders();
     document.addEventListener('click', this.handleClickOutside);
+    
+    // Пытаемся загрузить каждые 500 мс, пока не появится API
+    this.interval = setInterval(() => {
+      if (window.electronAPI?.getFolders && this.state.folders.length === 0) {
+        this.loadFolders();
+      }
+    }, 500);
   }
 
   componentWillUnmount() {
     document.removeEventListener('click', this.handleClickOutside);
+    clearInterval(this.interval);
   }
+
+  loadFolders = async () => {
+  if (!window.electronAPI?.getFolders) {
+    console.log("Electron API ещё не готов, ждём...");
+    return;
+  }
+  try {
+    const folders = await window.electronAPI.getFolders();
+    this.setState({ folders });
+  } catch (err) {
+    console.error("Не удалось загрузить папки:", err);
+  }
+};
+
+  handleAddFolder = async () => {
+    const name = window.prompt("Название папки:", "Моя папка");
+    if (!name?.trim()) return;
+
+    try {
+      const folder = await window.electronAPI.addFolder(name.trim());
+      console.log('Папка создана:', folder);
+      await this.loadFolders();
+    } catch (err) {
+      alert("Ошибка создания папки");
+      console.error(err);
+    }
+  };
+
+  handleRenameFolder = async (folderId, newName) => {
+    const folder = this.state.folders.find(f => f.id === folderId);
+    if (folder && folder.id <= 3) return; // Системные не редактируем
+
+    await window.electronAPI.renameFolder(folderId, newName);
+    this.loadFolders();
+  };
+
+  handleDeleteFolder = async () => {
+    const { folderId } = this.state.contextMenu;
+    const folder = this.state.folders.find(f => f.id === folderId);
+    if (folder && folder.id <= 3) return;
+
+    await window.electronAPI.deleteFolder(folderId);
+    this.loadFolders();
+    this.setState({
+      contextMenu: { visible: false, x: 0, y: 0, folderId: null }
+    });
+  };
+
+  handleDropOnFolder = async (e, folderId) => {
+    e.preventDefault();
+    const files = Array.from(e.dataTransfer.files);
+   
+    for (const file of files) {
+      if (!file.type.startsWith('image/')) continue;
+     
+      const buffer = await file.arrayBuffer();
+      const array = new Uint8Array(buffer);
+      const result = await window.electronAPI.uploadImage(array, file.name, folderId);
+     
+      if (result.success) {
+        console.log(`Загружено в папку ${folderId}: ${file.name}`);
+      }
+    }
+   
+    this.loadFolders();
+  };
+
+  onFolderClick = (folderId) => {
+    this.setState({ selectedFolderId: folderId });
+  };
 
   handleClickOutside = (e) => {
     if (this.state.contextMenu.visible) {
@@ -57,7 +134,7 @@ class Leftbar extends React.Component {
     
     // Проверяем, можно ли редактировать папку
     const folder = this.state.folders.find(f => f.id === folderId);
-    if (folder && folder.editable === false) return;
+    if (folder && folder.id <= 3) return;
     
     this.setState({
       contextMenu: {
@@ -69,57 +146,9 @@ class Leftbar extends React.Component {
     });
   }
 
-  handleDeleteFolder = () => {
-    const { folderId } = this.state.contextMenu;
-    if (folderId) {
-      // Дополнительная проверка на возможность удаления
-      const folder = this.state.folders.find(f => f.id === folderId);
-      if (folder && folder.editable === false) return;
-      
-      this.setState(prevState => ({
-        folders: prevState.folders.filter(folder => folder.id !== folderId),
-        contextMenu: {
-          visible: false,
-          x: 0,
-          y: 0,
-          folderId: null
-        }
-      }));
-    }
-  }
-
-  handleAddFolder = () => {
-    const newFolder = {
-      id: this.state.nextId,
-      name: "Новая папка",
-      count: 0,
-      icon: "📁",
-      editable: true // Новые папки всегда редактируемые
-    };
-    
-    this.setState(prevState => ({
-      folders: [...prevState.folders, newFolder],
-      nextId: prevState.nextId + 1,
-      editingFolderId: newFolder.id
-    }));
-  }
-
-  handleRenameFolder = (folderId, newName) => {
-    // Проверяем, можно ли редактировать папку
-    const folder = this.state.folders.find(f => f.id === folderId);
-    if (folder && folder.editable === false) return;
-    
-    this.setState(prevState => ({
-      folders: prevState.folders.map(folder =>
-        folder.id === folderId ? { ...folder, name: newName } : folder
-      )
-    }));
-  }
-
   handleStartEditing = (folderId) => {
-    // Проверяем, можно ли редактировать папку
     const folder = this.state.folders.find(f => f.id === folderId);
-    if (folder && folder.editable === false) return;
+    if (folder && folder.id <= 3) return;
     
     this.setState({ editingFolderId: folderId });
   }
@@ -128,10 +157,9 @@ class Leftbar extends React.Component {
     this.setState({ editingFolderId: null });
   }
 
-  // Разделяем папки на системные и пользовательские
   getFolderGroups = () => {
-    const systemFolders = this.state.folders.filter(folder => folder.editable === false);
-    const userFolders = this.state.folders.filter(folder => folder.editable === true);
+    const systemFolders = this.state.folders.filter(folder => folder.id <= 3);
+    const userFolders = this.state.folders.filter(folder => folder.id > 3);
     
     return { systemFolders, userFolders };
   }
@@ -149,45 +177,55 @@ class Leftbar extends React.Component {
         />
 
         <div className="leftbar__folders">
-          {/* Системные папки */}
           {systemFolders.map(folder => (
             <Folder
               key={folder.id}
               initialName={folder.name}
               itemCount={folder.count}
               icon={folder.icon}
-              editable={folder.editable}
               isEditing={folder.id === this.state.editingFolderId}
               onRename={(newName) => this.handleRenameFolder(folder.id, newName)}
               onStartEditing={() => this.handleStartEditing(folder.id)}
               onStopEditing={this.handleStopEditing}
               onContextMenu={(e) => this.handleContextMenu(e, folder.id)}
+              onDrop={(e) => this.handleDropOnFolder(e, folder.id)}
+              onDragOver={(e) => e.preventDefault()}
+              onClick={() => {
+                this.onFolderClick(folder.id);
+                if (this.props.onFolderSelect) {
+                  this.props.onFolderSelect(folder.id);
+                }
+              }}
             />
           ))}
 
-          {/* Разделитель 50px между системными и пользовательскими папками */}
           {userFolders.length > 0 && (
             <div className="leftbar__divider"></div>
           )}
 
-          {/* Пользовательские папки */}
           {userFolders.map(folder => (
             <Folder
               key={folder.id}
               initialName={folder.name}
               itemCount={folder.count}
               icon={folder.icon}
-              editable={folder.editable}
               isEditing={folder.id === this.state.editingFolderId}
               onRename={(newName) => this.handleRenameFolder(folder.id, newName)}
               onStartEditing={() => this.handleStartEditing(folder.id)}
               onStopEditing={this.handleStopEditing}
               onContextMenu={(e) => this.handleContextMenu(e, folder.id)}
+              onDrop={(e) => this.handleDropOnFolder(e, folder.id)}
+              onDragOver={(e) => e.preventDefault()}
+              onClick={() => {
+                this.onFolderClick(folder.id);
+                if (this.props.onFolderSelect) {
+                  this.props.onFolderSelect(folder.id);
+                }
+              }}
             />
           ))}
         </div>
 
-        {/* Контекстное меню */}
         {contextMenu.visible && (
           <div 
             className="context-menu"

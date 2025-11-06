@@ -82,7 +82,7 @@ const simulateFileUpload = async (files) => {
     try {
         const buffer = await file.arrayBuffer();
         const array = new Uint8Array(buffer);
-        const result = await window.electronAPI.uploadImage(array, file.name, folderId);
+        const result = await window.electronAPI.uploadImage(array, file.name, 1); // 1 = All
 
         if (result.success) {
           console.log(`Успешно загружено: ${file.name} (ID: ${result.id})`);
