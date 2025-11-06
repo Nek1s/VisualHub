@@ -54,7 +54,7 @@ ipcMain.handle('add-folder', async (event, name) => {
   console.log('Создаём папку:', name);
   const result = db.prepare('INSERT INTO folders (name) VALUES (?)').run(name);
   const id = result.lastInsertRowid;
-  return { id, name };
+  return { id, name, icon: 'folder' };
 });
 
 ipcMain.handle('get-folders', async () => {
