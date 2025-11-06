@@ -42,7 +42,7 @@ class Leftbar extends React.Component {
   };
 
   handleAddFolder = async () => {
-    const name = window.prompt("Название папки:", "Моя папка");
+    const name = "Новая папка " + Date.now(); // вместо prompt, чтобы проверить
     if (!name?.trim()) return;
 
     try {
@@ -71,7 +71,6 @@ class Leftbar extends React.Component {
               key={folder.id}
               initialName={folder.name}
               itemCount={folder.count || 0}
-              icon={folder.icon || "Folder"}
               editable={folder.editable !== false}
               isEditing={folder.id === this.state.editingFolderId}
               onRename={(newName) => {
