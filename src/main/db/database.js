@@ -60,7 +60,4 @@ db.prepare(`
   (1, 'All'), (2, 'Uncategorized'), (3, 'Trash')
 `).run();
 
-// После создания таблицы folders
-db.prepare("ALTER TABLE folders ADD COLUMN icon TEXT DEFAULT 'folder'").run();
-
 module.exports = db;

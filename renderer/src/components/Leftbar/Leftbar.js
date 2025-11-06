@@ -60,7 +60,7 @@ class Leftbar extends React.Component {
 };
 
   handleAddFolder = async () => {
-    const name = "Моя папка " + Date.now(); // временно, чтобы проверить
+    const name = window.prompt("Название папки:", "Моя папка");
     if (!name?.trim()) return;
 
     try {
