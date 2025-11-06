@@ -5,4 +5,5 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getImages: (folderId) => ipcRenderer.invoke('get-images', folderId),
   getImageUrl: (imagePath) => ipcRenderer.invoke('get-image-url', imagePath),
   addFolder: (name) => ipcRenderer.invoke('add-folder', name),
+  getFolders: () => ipcRenderer.invoke('get-folders'),
 });

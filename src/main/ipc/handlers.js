@@ -53,16 +53,17 @@ ipcMain.handle('get-image-url', (event, imagePath) => {
 ipcMain.handle('add-folder', async (event, name) => {
   console.log('Создаём папку:', name);
   const result = db.prepare('INSERT INTO folders (name) VALUES (?)').run(name);
-  const id = result.lastInsertRowid;
-  return { id, name, icon: 'folder' };
+  return { id: result.lastInsertRowid, name };
 });
 
 ipcMain.handle('get-folders', async () => {
-  return db.prepare(`
-    SELECT f.*, COUNT(i.id) as count
-    FROM folders f
-    LEFT JOIN images i ON i.folderId = f.id OR (f.id = 1 AND i.folderId IS NOT NULL)
-    GROUP BY f.id
-    ORDER BY f.id
-  `).all();
+  const folders = db.prepare('SELECT * FROM folders ORDER BY id').all();
+  folders.forEach(f => {
+    if (f.id === 1) {
+      f.count = db.prepare('SELECT COUNT(*) as c FROM images').get().c;
+    } else {
+      f.count = db.prepare('SELECT COUNT(*) as c FROM images WHERE folderId = ?').get(f.id)?.c || 0;
+    }
+  });
+  return folders;
 });
