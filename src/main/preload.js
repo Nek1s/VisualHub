@@ -6,4 +6,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getImageUrl: (imagePath) => ipcRenderer.invoke('get-image-url', imagePath),
   addFolder: (name) => ipcRenderer.invoke('add-folder', name),
   getFolders: () => ipcRenderer.invoke('get-folders'),
+  deleteFolder: (folderId) => ipcRenderer.invoke('delete-folder', folderId),
+  renameFolder: (folderId, newName) => ipcRenderer.invoke('rename-folder', folderId, newName),
 });
