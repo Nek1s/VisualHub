@@ -7,7 +7,8 @@
     "start": "electron .",
     "dev": "npm run build && npm run start",
     "rebuild": "npx electron-rebuild -f -w better-sqlite3",
-    "setup": "npm install && npm run rebuild"
+    "setup": "npm install && npm run rebuild",
+    "reset": "node reset.js"
   },
   "author": "Your-Team",
   "license": "MIT",
@@ -15,13 +16,15 @@
     "@types/node": "^24.10.0",
     "electron": "^38.5.0",
     "electron-rebuild": "^3.2.9",
-    "typescript": "^5.9.3"
+    "react-scripts": "^5.0.1",
+    "typescript": "^4.9.5"
   },
   "dependencies": {
     "better-sqlite3": "^12.4.1",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "sharp": "^0.34.4",
-    "sqlite3": "^5.1.7"
+    "sqlite3": "^5.1.7",
+    "web-vitals": "^5.1.0"
   }
 }

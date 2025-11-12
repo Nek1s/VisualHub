@@ -3,8 +3,8 @@ const { app, BrowserWindow } = require('electron');
 const path = require('path');
 
 // Подключаем обработчики IPC и БД
-require('./ipc/handlers');     // ← добавим позже
-require('./db/database');      // ← добавим позже
+require('./ipc/handlers_optimized');
+require('./db/database');
 
 const createWindow = () => {
   const mainWindow = new BrowserWindow({

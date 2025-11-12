@@ -5,140 +5,122 @@ import AddFolderButton from '../AddFolderButton/AddFolderButton';
 
 class Leftbar extends React.Component {
   constructor(props) {
-    super(props)
+    super(props);
     this.state = {
       folders: [
-        { id: 1, name: "All", count: 15, icon: "📁", editable: false },
-        { id: 2, name: "Uncategorized", count: 128, icon: "🧷", editable: false },
-        { id: 3, name: "Trash", count: 42, icon: "🗑️", editable: false },
+        { id: 1, name: "All", count: 0, icon: "📁", editable: false },
+        { id: 2, name: "Uncategorized", count: 0, icon: "🧷", editable: false },
+        { id: 3, name: "Trash", count: 0, icon: "🗑️", editable: false },
       ],
-      nextId: 4,
       editingFolderId: null,
-      contextMenu: {
-        visible: false,
-        x: 0,
-        y: 0,
-        folderId: null
-      }
-    }
-    
+      contextMenu: { visible: false, x: 0, y: 0, folderId: null },
+      showAddFolderModal: false,
+      newFolderName: '',
+      sortBy: 'id' // 'id', 'name', 'date'
+    };
+
     this.handleAddFolder = this.handleAddFolder.bind(this);
-    this.handleRenameFolder = this.handleRenameFolder.bind(this);
-    this.handleStartEditing = this.handleStartEditing.bind(this);
-    this.handleStopEditing = this.handleStopEditing.bind(this);
-    this.handleContextMenu = this.handleContextMenu.bind(this);
-    this.handleDeleteFolder = this.handleDeleteFolder.bind(this);
-    this.handleClickOutside = this.handleClickOutside.bind(this);
+    this.loadFolders = this.loadFolders.bind(this);
+    this.folderNameInputRef = React.createRef();
   }
 
   componentDidMount() {
+    this.loadFolders();
+    this.interval = setInterval(() => {
+      if (window.electronAPI?.getFolders) this.loadFolders();
+    }, 1000);
+    
+    // Закрываем контекстное меню при клике вне его
     document.addEventListener('click', this.handleClickOutside);
   }
 
   componentWillUnmount() {
+    clearInterval(this.interval);
     document.removeEventListener('click', this.handleClickOutside);
   }
 
-  handleClickOutside = (e) => {
+  handleClickOutside = () => {
     if (this.state.contextMenu.visible) {
-      this.setState({
-        contextMenu: {
-          visible: false,
-          x: 0,
-          y: 0,
-          folderId: null
-        }
-      });
+      this.setState({ contextMenu: { visible: false, x: 0, y: 0, folderId: null } });
     }
-  }
+  };
 
-  handleContextMenu = (e, folderId) => {
-    e.preventDefault();
-    
-    // Проверяем, можно ли редактировать папку
-    const folder = this.state.folders.find(f => f.id === folderId);
-    if (folder && folder.editable === false) return;
-    
-    this.setState({
-      contextMenu: {
-        visible: true,
-        x: e.clientX,
-        y: e.clientY,
-        folderId: folderId
-      }
-    });
-  }
-
-  handleDeleteFolder = () => {
-    const { folderId } = this.state.contextMenu;
-    if (folderId) {
-      // Дополнительная проверка на возможность удаления
-      const folder = this.state.folders.find(f => f.id === folderId);
-      if (folder && folder.editable === false) return;
-      
-      this.setState(prevState => ({
-        folders: prevState.folders.filter(folder => folder.id !== folderId),
-        contextMenu: {
-          visible: false,
-          x: 0,
-          y: 0,
-          folderId: null
-        }
-      }));
+  loadFolders = async () => {
+    if (!window.electronAPI?.getFolders) return;
+    try {
+      const folders = await window.electronAPI.getFolders(this.state.sortBy);
+      this.setState({ folders });
+    } catch (err) {
+      console.log("Папки ещё не готовы");
     }
-  }
+  };
 
   handleAddFolder = () => {
-    const newFolder = {
-      id: this.state.nextId,
-      name: "Новая папка",
-      count: 0,
-      icon: "📁",
-      editable: true // Новые папки всегда редактируемые
-    };
-    
-    this.setState(prevState => ({
-      folders: [...prevState.folders, newFolder],
-      nextId: prevState.nextId + 1,
-      editingFolderId: newFolder.id
-    }));
-  }
+    this.setState({ showAddFolderModal: true, newFolderName: '' }, () => {
+      // Фокусируемся на input после открытия модального окна
+      setTimeout(() => {
+        if (this.folderNameInputRef.current) {
+          this.folderNameInputRef.current.focus();
+        }
+      }, 100);
+    });
+  };
 
-  handleRenameFolder = (folderId, newName) => {
-    // Проверяем, можно ли редактировать папку
-    const folder = this.state.folders.find(f => f.id === folderId);
-    if (folder && folder.editable === false) return;
-    
-    this.setState(prevState => ({
-      folders: prevState.folders.map(folder =>
-        folder.id === folderId ? { ...folder, name: newName } : folder
-      )
-    }));
-  }
+  handleCreateFolder = async () => {
+    const name = this.state.newFolderName.trim();
+    if (!name) {
+      alert("Введите название папки");
+      return;
+    }
 
-  handleStartEditing = (folderId) => {
-    // Проверяем, можно ли редактировать папку
-    const folder = this.state.folders.find(f => f.id === folderId);
-    if (folder && folder.editable === false) return;
-    
-    this.setState({ editingFolderId: folderId });
-  }
+    try {
+      const result = await window.electronAPI.addFolder(name);
+      if (result.success) {
+        console.log('Папка создана:', result.path);
+        this.loadFolders();
+        this.setState({ showAddFolderModal: false, newFolderName: '' });
+      } else {
+        alert("Ошибка: " + (result.error || "Не удалось создать папку"));
+      }
+    } catch (err) {
+      alert("Не удалось создать папку: " + err.message);
+    }
+  };
 
-  handleStopEditing = () => {
-    this.setState({ editingFolderId: null });
-  }
+  handleCancelAddFolder = () => {
+    this.setState({ showAddFolderModal: false, newFolderName: '' });
+  };
 
-  // Разделяем папки на системные и пользовательские
-  getFolderGroups = () => {
-    const systemFolders = this.state.folders.filter(folder => folder.editable === false);
-    const userFolders = this.state.folders.filter(folder => folder.editable === true);
-    
-    return { systemFolders, userFolders };
-  }
+  handleFolderNameChange = (e) => {
+    this.setState({ newFolderName: e.target.value });
+  };
+
+  handleKeyPress = (e) => {
+    if (e.key === 'Enter') {
+      this.handleCreateFolder();
+    } else if (e.key === 'Escape') {
+      this.handleCancelAddFolder();
+    }
+  };
+
+  handleSortToggle = () => {
+    const nextSort = this.state.sortBy === 'name' ? 'date' : 'name';
+    this.setState({ sortBy: nextSort }, () => {
+      this.loadFolders();
+    });
+  };
+
+  handleRenameFolder = () => {
+    const folderId = this.state.contextMenu.folderId;
+    this.setState({
+      editingFolderId: folderId,
+      contextMenu: { visible: false, x: 0, y: 0, folderId: null }
+    });
+  };
 
   render() {
-    const { contextMenu } = this.state;
-    const { systemFolders, userFolders } = this.getFolderGroups();
+    const { folders, sortBy } = this.state;
+    const sortText = sortBy === 'name' ? 'Сортировать по дате' : 'Сортировать по имени';
 
     return (
       <div className='Leftbar'>
@@ -146,69 +128,118 @@ class Leftbar extends React.Component {
           className="leftbar__add-button"
           onClick={this.handleAddFolder}
           label="New folder"
+          icon="+"
         />
 
+        <button
+          className="leftbar__sort-button"
+          onClick={this.handleSortToggle}
+          title={sortText}
+        >
+          {sortText}
+        </button>
+
         <div className="leftbar__folders">
-          {/* Системные папки */}
-          {systemFolders.map(folder => (
+          {folders.map(folder => (
             <Folder
               key={folder.id}
               initialName={folder.name}
-              itemCount={folder.count}
-              icon={folder.icon}
-              editable={folder.editable}
+              itemCount={folder.count || 0}
+              editable={folder.editable !== false}
               isEditing={folder.id === this.state.editingFolderId}
-              onRename={(newName) => this.handleRenameFolder(folder.id, newName)}
-              onStartEditing={() => this.handleStartEditing(folder.id)}
-              onStopEditing={this.handleStopEditing}
-              onContextMenu={(e) => this.handleContextMenu(e, folder.id)}
-            />
-          ))}
-
-          {/* Разделитель 50px между системными и пользовательскими папками */}
-          {userFolders.length > 0 && (
-            <div className="leftbar__divider"></div>
-          )}
-
-          {/* Пользовательские папки */}
-          {userFolders.map(folder => (
-            <Folder
-              key={folder.id}
-              initialName={folder.name}
-              itemCount={folder.count}
-              icon={folder.icon}
-              editable={folder.editable}
-              isEditing={folder.id === this.state.editingFolderId}
-              onRename={(newName) => this.handleRenameFolder(folder.id, newName)}
-              onStartEditing={() => this.handleStartEditing(folder.id)}
-              onStopEditing={this.handleStopEditing}
-              onContextMenu={(e) => this.handleContextMenu(e, folder.id)}
+              onRename={async (newName) => {
+                if (folder.id > 3) {
+                  try {
+                    const result = await window.electronAPI.renameFolder(folder.id, newName);
+                    if (result.success) {
+                      this.loadFolders();
+                    } else {
+                      alert("Ошибка: " + (result.error || "Не удалось переименовать папку"));
+                    }
+                  } catch (err) {
+                    alert("Не удалось переименовать папку: " + err.message);
+                  }
+                }
+                this.setState({ editingFolderId: null });
+              }}
+              onStopEditing={() => {
+                this.setState({ editingFolderId: null });
+              }}
+              onContextMenu={(e) => {
+                if (folder.id > 3) {
+                  e.preventDefault();
+                  this.setState({
+                    contextMenu: { visible: true, x: e.clientX, y: e.clientY, folderId: folder.id }
+                  });
+                }
+              }}
+              onClick={() => this.props.onFolderSelect?.(folder.id)}
+              onDrop={(e) => {
+                e.preventDefault();
+                // drag & drop логика — потом добавишь
+              }}
+              onDragOver={(e) => e.preventDefault()}
             />
           ))}
         </div>
 
-        {/* Контекстное меню */}
-        {contextMenu.visible && (
-          <div 
-            className="context-menu"
-            style={{
-              position: 'fixed',
-              left: contextMenu.x,
-              top: contextMenu.y,
-              zIndex: 1000
-            }}
-          >
-            <button 
-              className="context-menu__item context-menu__item--delete"
-              onClick={this.handleDeleteFolder}
+        {this.state.contextMenu.visible && (
+          <div className="context-menu" style={{ position: 'fixed', left: this.state.contextMenu.x, top: this.state.contextMenu.y, zIndex: 1000 }}>
+            <button
+              className="context-menu__item"
+              onClick={this.handleRenameFolder}
+            >
+              <span className="context-menu__item-icon">✏️</span>
+              Переименовать
+            </button>
+            <button
+              className="context-menu__item"
+              onClick={async () => {
+                const folderId = this.state.contextMenu.folderId;
+                if (window.confirm('Вы уверены, что хотите удалить эту папку? Все изображения в ней будут удалены.')) {
+                  try {
+                    const result = await window.electronAPI.deleteFolder(folderId);
+                    if (result.success) {
+                      console.log('Папка удалена');
+                      this.loadFolders();
+                    } else {
+                      alert("Ошибка: " + (result.error || "Не удалось удалить папку"));
+                    }
+                  } catch (err) {
+                    alert("Не удалось удалить папку: " + err.message);
+                  }
+                }
+                this.setState({ contextMenu: { visible: false } });
+              }}
             >
               <span className="context-menu__item-icon">🗑️</span>
               Удалить папку
             </button>
           </div>
         )}
+
+        {this.state.showAddFolderModal && (
+          <div className="modal-overlay" onClick={this.handleCancelAddFolder}>
+            <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+              <h3>Создать новую папку</h3>
+              <input
+                ref={this.folderNameInputRef}
+                type="text"
+                value={this.state.newFolderName}
+                onChange={this.handleFolderNameChange}
+                onKeyDown={this.handleKeyPress}
+                placeholder="Название папки"
+                className="folder-name-input"
+              />
+              <div className="modal-buttons">
+                <button onClick={this.handleCreateFolder} className="btn-create">Создать</button>
+                <button onClick={this.handleCancelAddFolder} className="btn-cancel">Отмена</button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
-    )
+    );
   }
 }
 
