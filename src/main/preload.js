@@ -5,7 +5,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getImages: (folderId) => ipcRenderer.invoke('get-images', folderId),
   getImageUrl: (imagePath) => ipcRenderer.invoke('get-image-url', imagePath),
   addFolder: (name) => ipcRenderer.invoke('add-folder', name),
-  getFolders: () => ipcRenderer.invoke('get-folders'),
+  getFolders: (sortBy) => ipcRenderer.invoke('get-folders', sortBy),
   deleteFolder: (folderId) => ipcRenderer.invoke('delete-folder', folderId),
   renameFolder: (folderId, newName) => ipcRenderer.invoke('rename-folder', folderId, newName),
 });

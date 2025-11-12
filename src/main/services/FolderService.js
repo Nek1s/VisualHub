@@ -17,13 +17,13 @@ class FolderService {
   /**
    * Получить все папки с количеством изображений
    */
-  async getAllFolders() {
+  async getAllFolders(sortBy = 'id') {
     try {
       // Синхронизировать физические папки с БД
       FolderQueries.syncPhysicalFolders(this.baseDir);
 
       // Получить все папки с подсчетом
-      const folders = FolderQueries.getAllWithCounts();
+      const folders = FolderQueries.getAllWithCounts(sortBy);
 
       return folders;
     } catch (error) {

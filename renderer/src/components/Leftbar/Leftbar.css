@@ -12,12 +12,37 @@
   gap: 50px;
 }
 
+/* Кнопка сортировки */
+.leftbar__sort-button {
+  background: none;
+  border: 1px solid #444;
+  border-radius: 6px;
+  color: #fff;
+  cursor: pointer;
+  font-size: 12px;
+  padding: 8px 12px;
+  margin-top: 10px;
+  transition: all 0.2s ease;
+  width: auto;
+  min-width: 140px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+}
+
+.leftbar__sort-button:hover {
+  background-color: #444;
+  border-color: #666;
+}
+
 /* Контейнер для списка папок */
 .leftbar__folders {
   display: flex;
   flex-direction: column;
   gap: 5px;
-  margin-top:50px;
+  margin-top: 20px;
 }
 
 /* Разделитель между системными и пользовательскими папками */

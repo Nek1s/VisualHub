@@ -88,16 +88,44 @@ const FolderQueries = {
   /**
    * Получить все папки с количеством изображений
    */
-  getAllWithCounts: () => {
-    return db.prepare(`
+  getAllWithCounts: (sortBy = 'id') => {
+    // Сначала получаем системные папки (id <= 3)
+    const systemFolders = db.prepare(`
       SELECT
         f.*,
         COUNT(i.id) as imageCount
       FROM folders f
       LEFT JOIN images i ON f.id = i.folderId
+      WHERE f.id <= 3
       GROUP BY f.id
       ORDER BY f.id
     `).all();
+
+    // Затем пользовательские папки с сортировкой
+    let orderBy;
+    switch (sortBy) {
+      case 'name':
+        orderBy = 'f.name ASC';
+        break;
+      case 'date':
+        orderBy = 'f.createdAt DESC';
+        break;
+      default:
+        orderBy = 'f.id ASC';
+    }
+
+    const userFolders = db.prepare(`
+      SELECT
+        f.*,
+        COUNT(i.id) as imageCount
+      FROM folders f
+      LEFT JOIN images i ON f.id = i.folderId
+      WHERE f.id > 3
+      GROUP BY f.id
+      ORDER BY ${orderBy}
+    `).all();
+
+    return [...systemFolders, ...userFolders];
   },
 
   /**

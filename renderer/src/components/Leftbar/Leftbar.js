@@ -15,7 +15,8 @@ class Leftbar extends React.Component {
       editingFolderId: null,
       contextMenu: { visible: false, x: 0, y: 0, folderId: null },
       showAddFolderModal: false,
-      newFolderName: ''
+      newFolderName: '',
+      sortBy: 'id' // 'id', 'name', 'date'
     };
 
     this.handleAddFolder = this.handleAddFolder.bind(this);
@@ -47,7 +48,7 @@ class Leftbar extends React.Component {
   loadFolders = async () => {
     if (!window.electronAPI?.getFolders) return;
     try {
-      const folders = await window.electronAPI.getFolders();
+      const folders = await window.electronAPI.getFolders(this.state.sortBy);
       this.setState({ folders });
     } catch (err) {
       console.log("Папки ещё не готовы");
@@ -102,8 +103,24 @@ class Leftbar extends React.Component {
     }
   };
 
+  handleSortToggle = () => {
+    const nextSort = this.state.sortBy === 'name' ? 'date' : 'name';
+    this.setState({ sortBy: nextSort }, () => {
+      this.loadFolders();
+    });
+  };
+
+  handleRenameFolder = () => {
+    const folderId = this.state.contextMenu.folderId;
+    this.setState({
+      editingFolderId: folderId,
+      contextMenu: { visible: false, x: 0, y: 0, folderId: null }
+    });
+  };
+
   render() {
-    const { folders } = this.state;
+    const { folders, sortBy } = this.state;
+    const sortText = sortBy === 'name' ? 'Сортировать по дате' : 'Сортировать по имени';
 
     return (
       <div className='Leftbar'>
@@ -114,6 +131,14 @@ class Leftbar extends React.Component {
           icon="+"
         />
 
+        <button
+          className="leftbar__sort-button"
+          onClick={this.handleSortToggle}
+          title={sortText}
+        >
+          {sortText}
+        </button>
+
         <div className="leftbar__folders">
           {folders.map(folder => (
             <Folder
@@ -122,8 +147,23 @@ class Leftbar extends React.Component {
               itemCount={folder.count || 0}
               editable={folder.editable !== false}
               isEditing={folder.id === this.state.editingFolderId}
-              onRename={(newName) => {
-                if (folder.id > 3) window.electronAPI.renameFolder(folder.id, newName);
+              onRename={async (newName) => {
+                if (folder.id > 3) {
+                  try {
+                    const result = await window.electronAPI.renameFolder(folder.id, newName);
+                    if (result.success) {
+                      this.loadFolders();
+                    } else {
+                      alert("Ошибка: " + (result.error || "Не удалось переименовать папку"));
+                    }
+                  } catch (err) {
+                    alert("Не удалось переименовать папку: " + err.message);
+                  }
+                }
+                this.setState({ editingFolderId: null });
+              }}
+              onStopEditing={() => {
+                this.setState({ editingFolderId: null });
               }}
               onContextMenu={(e) => {
                 if (folder.id > 3) {
@@ -145,6 +185,13 @@ class Leftbar extends React.Component {
 
         {this.state.contextMenu.visible && (
           <div className="context-menu" style={{ position: 'fixed', left: this.state.contextMenu.x, top: this.state.contextMenu.y, zIndex: 1000 }}>
+            <button
+              className="context-menu__item"
+              onClick={this.handleRenameFolder}
+            >
+              <span className="context-menu__item-icon">✏️</span>
+              Переименовать
+            </button>
             <button
               className="context-menu__item"
               onClick={async () => {

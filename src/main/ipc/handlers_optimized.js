@@ -113,9 +113,9 @@ ipcMain.handle('rename-folder', async (event, folderId, newName) => {
 /**
  * Обработчик получения всех папок
  */
-ipcMain.handle('get-folders', async () => {
+ipcMain.handle('get-folders', async (event, sortBy) => {
   try {
-    return await folderService.getAllFolders();
+    return await folderService.getAllFolders(sortBy);
   } catch (error) {
     console.error('Ошибка получения папок:', error.message);
     return [];
