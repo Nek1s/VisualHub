@@ -43,10 +43,43 @@ const FolderQueries = {
       folders.forEach(folder => {
         const folderPath = path.join(baseDir, folder.name);
         if (!fs.existsSync(folderPath)) {
-          fs.mkdirSync(folderPath, { recursive: true });
-          console.log('Создана папка:', folderPath);
+          // Восстанавливаем только системные папки
+          if (folder.id <= 3) {
+            fs.mkdirSync(folderPath, { recursive: true });
+            console.log('Восстановлена системная папка:', folderPath);
+          } else {
+            // Для пользовательских папок, если их нет физически, удаляем из БД
+            console.log('Удалена пользовательская папка из БД:', folder.name);
+            db.prepare('DELETE FROM folders WHERE id = ?').run(folder.id);
+            // Также удаляем связанные изображения
+            db.prepare('DELETE FROM images WHERE folderId = ?').run(folder.id);
+          }
         }
       });
+
+      // Проверить наличие новых физических папок, которых нет в БД
+      const physicalFolders = fs.readdirSync(baseDir, { withFileTypes: true })
+        .filter(dirent => dirent.isDirectory())
+        .map(dirent => dirent.name);
+
+      // Получить список папок из БД для сравнения (только пользовательские)
+      const dbFolders = db.prepare('SELECT name FROM folders WHERE id > 3').all()
+        .map(f => f.name);
+
+      // Находим новые папки, которых нет в БД
+      const newFolders = physicalFolders.filter(folderName =>
+        !dbFolders.includes(folderName) && !['All', 'Uncategorized', 'Trash'].includes(folderName)
+      );
+
+      // Добавляем новые папки в БД
+      for (const folderName of newFolders) {
+        const folderPath = path.join(baseDir, folderName);
+        const displayName = folderName.replace(/_/g, ' ');
+
+        console.log('Найдена новая физическая папка, добавляем в БД:', displayName, folderPath);
+
+        db.prepare('INSERT INTO folders (name, path) VALUES (?, ?)').run(displayName, folderPath);
+      }
     } catch (error) {
       console.error('Ошибка синхронизации папок:', error.message);
     }
