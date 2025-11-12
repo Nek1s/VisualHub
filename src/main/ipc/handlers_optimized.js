@@ -5,16 +5,29 @@ const fs = require('fs');
 const chokidar = require('chokidar');
 
 // Импорты наших оптимизированных модулей
-const { ImageQueries } = require('../db/queries');
+const { ImageQueries, FolderQueries } = require('../db/queries');
 const { ImageModel } = require('../db/models');
 const FolderService = require('../services/FolderService');
 const ValidationUtils = require('../utils/validation');
 const CONSTANTS = require('../utils/constants');
 
 // Создание необходимых директорий
-[CONSTANTS.IMAGES_DIR, CONSTANTS.THUMBS_DIR].forEach(dir => fs.mkdirSync(dir, { recursive: true }));
+[CONSTANTS.IMAGES_DIR, CONSTANTS.THUMBS_DIR, CONSTANTS.FOLDERS_DIR].forEach(dir => fs.mkdirSync(dir, { recursive: true }));
 
 const folderService = new FolderService(CONSTANTS.FOLDERS_DIR);
+
+// Инициализация системных папок при запуске
+const initializeSystemFolders = () => {
+  console.log('Инициализация системных папок...');
+
+  // Синхронизируем все папки с файловой системой
+  FolderQueries.syncPhysicalFolders(CONSTANTS.FOLDERS_DIR);
+
+  console.log('Системные папки инициализированы');
+};
+
+// Вызываем инициализацию
+initializeSystemFolders();
 
 /**
  * Обработчик загрузки изображений
