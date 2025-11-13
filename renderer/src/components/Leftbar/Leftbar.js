@@ -142,11 +142,6 @@ class Leftbar extends React.Component {
 
     return (
       <div className='Leftbar'>
-        <AddFolderButton
-          className="leftbar__add-button"
-          onClick={this.handleAddFolder}
-          label="New folder"
-        />
 
         <div className="leftbar__folders">
           {/* Системные папки */}
@@ -164,6 +159,11 @@ class Leftbar extends React.Component {
               onContextMenu={(e) => this.handleContextMenu(e, folder.id)}
             />
           ))}
+          <AddFolderButton
+          className="leftbar__add-button"
+          onClick={this.handleAddFolder}
+          label="New folder"
+          />
 
           {/* Разделитель 50px между системными и пользовательскими папками */}
           {userFolders.length > 0 && (

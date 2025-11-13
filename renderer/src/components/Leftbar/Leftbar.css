@@ -2,12 +2,8 @@
   height: 100vh;
   min-width: 230px;
   text-align: left;
-  
-  padding-left: 20px;
-  padding-right: 20px;
-
-  background-color: #232323;
-  border: 1px solid #3D3D3D;
+  padding-left: 15px;
+  padding-right: 15px;
   color: #fff;
   gap: 50px;
 }
@@ -17,12 +13,12 @@
   display: flex;
   flex-direction: column;
   gap: 5px;
-  margin-top:50px;
+  margin-top:60px;
 }
 
 /* Разделитель между системными и пользовательскими папками */
 .leftbar__divider {
-  height: 50px; /* Расстояние 50px */
+  height: 30px; /* Расстояние 50px */
   width: 100%;
 }
 
@@ -58,7 +54,6 @@
   background: none;
   color: #fff;
   font-size: 14px;
-  font-family: inherit;
   cursor: pointer;
   transition: background-color 0.2s ease;
   text-align: left;
