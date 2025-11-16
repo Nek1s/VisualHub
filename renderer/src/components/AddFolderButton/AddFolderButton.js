@@ -1,5 +1,6 @@
 import React from 'react';
 import './AddFolderButton.css';
+import { ReactComponent as PlusIcon } from '../../icons/ic_plus.svg'; // Добавлено расширение .svg
 
 class AddFolderButton extends React.Component {
   constructor(props) {
@@ -14,7 +15,7 @@ class AddFolderButton extends React.Component {
   }
 
   render() {
-    const { label = "Новая папка", disabled = false, icon="+" } = this.props;
+    const { label = "Новая папка", disabled = false } = this.props;
     
     return (
       <button 
@@ -23,7 +24,9 @@ class AddFolderButton extends React.Component {
         disabled={disabled}
         type="button"
       >
-        <span className="AddFolderButton__icon">{icon}</span>
+        <span className="AddFolderButton__icon">
+          <PlusIcon className="AddFolderButton__svg" />
+        </span>
         <span className="AddFolderButton__label">{label}</span>
       </button>
     )

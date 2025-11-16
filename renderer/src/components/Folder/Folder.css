@@ -1,9 +1,7 @@
 /* Основные стили папки */
 .folder {
   display: flex;
-  font-family: Arial, sans-serif;
   width: 100%;
-  height: 40px;
 }
 
 /* Состояние редактирования */
@@ -17,41 +15,56 @@
   display: flex;
   align-items: center;
   width: 100%;
-  gap: 12px;
-  padding: 12px 10px;
-  border-radius: 8px;
-  background-color: #232323;
+  gap: 8px;
+  padding: 5px 8px;
+  border-radius: 5px;
+  background-color: transparent;
   cursor: pointer;
   transition: all 0.2s ease-in-out;
 }
 
 .folder__edit-container {
   cursor: default;
-  background-color: #363636;
-  box-shadow: inset 0 0 0 1px #545454;
+  background-color: #272727;
+  box-shadow: inset 0 0 0 1px #2C2C2C;
 }
 
 .folder__content:hover {
-  background-color: #363636;
+  background-color: #272727;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 /* Иконка папки */
 .folder__icon {
+  height: 18px;
+  line-height: 18px;
   font-size: 16px;
+  line-height: 1;
   flex-shrink: 0;
-  width: 20px;
+  width: 18px;
+  height: 18px;
   text-align: center;
-  color: #ffffff;
+  color: #f3f3f3;
+}
+
+.folder__svg {
+  width: 16px;
+  height: 16px;
+}
+
+.folder__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 /* Заголовок папки */
 .folder__title {
   cursor: pointer;
   margin: 0;
-  font-size: 14px;
+  font-size: 11px;
   font-weight: 500;
-  color: #ffffff;
+  color: #f3f3f3;
   word-break: break-word;
   user-select: none;
   flex: 1;
@@ -62,8 +75,8 @@
 
 /* Счетчик элементов */
 .folder__count {
-  color: #9B9B9B;
-  font-size: 14px;
+  color: #838383;
+  font-size: 11px;
   font-weight: 500;
   min-width: 24px;
   text-align: center;
@@ -75,7 +88,7 @@
   width: 100%;
   border: none;
   background: transparent;
-  font-size: 14px;
+  font-size: 11px;
   font-weight: 500;
   font-family: inherit;
   color: #ffffff;
