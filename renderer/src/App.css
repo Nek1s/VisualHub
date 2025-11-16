@@ -1,22 +1,29 @@
 .App {
-  display:flex;
+  background-color: #141414;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.app-items {
+  flex: 1;
+  display: flex;
   text-align: center;
   justify-content: space-between;
-  height:100vh;
-
-  background-color: #141414;
+  min-height: 0; /* Важно для правильного расчета flex-элементов */
+  margin-bottom: 15px;
 }
 
 .app-content {
   display: flex;
-  background-color: #1C1C1C;
-  border: 1px solid #2C2C2C;
-  border-radius: 20px;
-  align-items: center;
-  gap:10px;
+  height: 100%;
   width: 100%;
-  margin-top: 15px;
-  margin-bottom: 15px;
+  margin-bottom: 20px;
+  align-items: center;
+  background-color: #181818;
+  border: 1px solid #242424;
+  border-radius: 20px;
+
 }
 
 .App-logo {

@@ -1,11 +1,42 @@
 .Leftbar {
-  height: 100vh;
-  min-width: 230px;
+  display: flex;
+  flex-direction: column;
+  
+  height: 100%;
+  min-width: 215px;
+  max-width: 215px;
   text-align: left;
   padding-left: 15px;
   padding-right: 15px;
+  background-color: #141414;
+  color: #F3F3F3;
+
+  gap: 30px;
+}
+
+/* Кнопка сортировки */
+.leftbar__sort-button {
+  background: none;
+  border: 1px solid #444;
+  border-radius: 6px;
   color: #fff;
-  gap: 50px;
+  cursor: pointer;
+  font-size: 12px;
+  padding: 8px 12px;
+  margin-top: 10px;
+  transition: all 0.2s ease;
+  width: auto;
+  min-width: 140px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+}
+
+.leftbar__sort-button:hover {
+  background-color: #444;
+  border-color: #666;
 }
 
 /* Контейнер для списка папок */
@@ -13,13 +44,31 @@
   display: flex;
   flex-direction: column;
   gap: 5px;
-  margin-top:60px;
 }
 
-/* Разделитель между системными и пользовательскими папками */
-.leftbar__divider {
-  height: 30px; /* Расстояние 50px */
-  width: 100%;
+.folders-section-title {
+  font-size: 11px;
+  font-weight: 500;
+  color: #838383;
+  padding: 8px 16px;
+  margin-bottom: 8px;
+}
+
+/* Добавьте в Leftbar.css */
+.folder-icon {
+  width: 18px;
+  height: 18px;
+}
+
+/* Или если хотите разные размеры для разных иконок */
+.leftbar__system-folders .folder-icon {
+  width: 18px;
+  height: 18px;
+}
+
+.leftbar__custom-folders .folder-icon {
+  width: 18px;
+  height: 18px;
 }
 
 /* Контекстное меню */
@@ -70,11 +119,134 @@
   text-align: center;
 }
 
+/* Модальное окно для создания папки */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  animation: modalFadeIn 0.2s ease-out;
+}
+
+.modal-content {
+  background-color: #2a2a2a;
+  border-radius: 12px;
+  padding: 24px;
+  min-width: 300px;
+  max-width: 400px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  border: 1px solid #444;
+  animation: modalSlideIn 0.2s ease-out;
+}
+
+.modal-content h3 {
+  margin: 0 0 20px 0;
+  color: #fff;
+  font-size: 18px;
+  font-weight: 600;
+  text-align: center;
+}
+
+.folder-name-input {
+  width: 100%;
+  padding: 12px 16px;
+  border: 2px solid #444;
+  border-radius: 8px;
+  background-color: #1a1a1a;
+  color: #fff;
+  font-size: 16px;
+  outline: none;
+  transition: border-color 0.2s ease;
+  box-sizing: border-box;
+}
+
+.folder-name-input:focus {
+  border-color: #007bff;
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+}
+
+.folder-name-input::placeholder {
+  color: #888;
+}
+
+.modal-buttons {
+  display: flex;
+  gap: 12px;
+  margin-top: 20px;
+  justify-content: flex-end;
+}
+
+.btn-create, .btn-cancel {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 80px;
+}
+
+.btn-create {
+  background-color: #007bff;
+  color: white;
+}
+
+.btn-create:hover {
+  background-color: #0056b3;
+  transform: translateY(-1px);
+}
+
+.btn-cancel {
+  background-color: #6c757d;
+  color: white;
+}
+
+.btn-cancel:hover {
+  background-color: #545b62;
+  transform: translateY(-1px);
+}
+
+@keyframes modalFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9) translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
 /* Адаптивность */
 @media (max-width: 768px) {
   .context-menu__item {
     padding: 14px 16px;
     font-size: 16px;
     min-width: 140px;
+  }
+
+  .modal-content {
+    min-width: 280px;
+    padding: 20px;
+  }
+
+  .folder-name-input {
+    font-size: 16px; /* Предотвращает зум на мобильных */
   }
 }

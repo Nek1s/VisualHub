@@ -6,6 +6,7 @@ const createWindow = () => {
   const mainWindow = new BrowserWindow({
     width: 1200,
     height: 800,
+<<<<<<< HEAD
     autoHideMenuBar: true,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'), // Подключаем preload скрипт
@@ -22,6 +23,21 @@ const createWindow = () => {
 
   // Запуск приложения с реакта. Сначала запустить реакт, потом electron
   // mainWindow.loadURL('http://localhost:3000') 
+=======
+    autoHideMenuBar: true, // Убрал менюбар
+    titleBarStyle: 'customButtonsOnHover',
+    webPreferences: {
+      preload: path.join(__dirname, 'preload.js'), // Подключаем preload скрипт
+      contextIsolation: true, // Включено для безопасности
+      nodeIntegration: false, // Отключено для безопасности
+    }
+  });
+
+
+  mainWindow.loadFile('index.html');
+  // Для разработки можно раскомментировать следующую строку, чтобы открыть инструменты разработчика
+  // mainWindow.webContents.openDevTools();
+>>>>>>> temp-branch
 };
 
 app.whenReady().then(() => {

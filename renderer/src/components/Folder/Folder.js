@@ -1,5 +1,6 @@
 import React from 'react';
 import './Folder.css';
+import { ReactComponent as FolderIcon } from '../../icons/system_folders/ic_folder.svg';
 
 class Folder extends React.Component {
   constructor(props) {
@@ -58,11 +59,24 @@ class Folder extends React.Component {
     this.setState({ folderName: event.target.value });
   }
 
+  renderIcon = () => {
+    const { icon, editable = true } = this.props;
+    
+    // Если передана кастомная иконка (JSX элемент), используем её
+    if (React.isValidElement(icon)) {
+      return React.cloneElement(icon, {
+        className: `folder__svg ${icon.props.className || ''}`
+      });
+    }
+    
+    // Иначе используем дефолтную иконку FolderIcon
+    return <FolderIcon className="folder__svg" />;
+  }
+
   render() {
     const { folderName } = this.state;
     const { 
       itemCount = 0, 
-      icon = "📁", 
       isEditing = false,
       editable = true  // По умолчанию папка редактируемая
     } = this.props;
@@ -71,10 +85,15 @@ class Folder extends React.Component {
       <div 
         className={`folder ${isEditing ? 'folder--editing' : ''} ${!editable ? 'folder--non-editable' : ''}`}
         onContextMenu={this.handleContextMenu}
+        onClick={this.props.onClick}
+        onDrop={this.props.onDrop}
+        onDragOver={this.props.onDragOver}
       >
         {isEditing ? (
           <div className="folder__edit-container">
-            <span className="folder__icon">{icon}</span>
+            <span className="folder__icon">
+              {this.renderIcon()}
+            </span>
             <input
               className="folder__input"
               value={folderName}
@@ -92,7 +111,9 @@ class Folder extends React.Component {
             onClick={this.handleTitleClick}
             onContextMenu={this.handleContextMenu}
           >
-            <span className="folder__icon">{icon}</span>
+            <span className="folder__icon">
+              {this.renderIcon()}
+            </span>
             <h1 className="folder__title">
               {folderName}
             </h1>
