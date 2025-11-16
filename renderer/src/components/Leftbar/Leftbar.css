@@ -1,15 +1,16 @@
 .Leftbar {
-  height: 100vh;
-  min-width: 230px;
-  text-align: left;
+  display: flex;
+  flex-direction: column;
   
-  padding-left: 20px;
-  padding-right: 20px;
+  height: 100%;
+  min-width: 215px;
+  text-align: left;
+  padding-left: 15px;
+  padding-right: 15px;
+  background-color: #141414;
+  color: #F3F3F3;
 
-  background-color: #232323;
-  border: 1px solid #3D3D3D;
-  color: #fff;
-  gap: 50px;
+  gap: 30px;
 }
 
 /* Кнопка сортировки */
@@ -42,13 +43,31 @@
   display: flex;
   flex-direction: column;
   gap: 5px;
-  margin-top: 20px;
 }
 
-/* Разделитель между системными и пользовательскими папками */
-.leftbar__divider {
-  height: 50px; /* Расстояние 50px */
-  width: 100%;
+.folders-section-title {
+  font-size: 11px;
+  font-weight: 500;
+  color: #838383;
+  padding: 8px 16px;
+  margin-bottom: 8px;
+}
+
+/* Добавьте в Leftbar.css */
+.folder-icon {
+  width: 18px;
+  height: 18px;
+}
+
+/* Или если хотите разные размеры для разных иконок */
+.leftbar__system-folders .folder-icon {
+  width: 18px;
+  height: 18px;
+}
+
+.leftbar__custom-folders .folder-icon {
+  width: 18px;
+  height: 18px;
 }
 
 /* Контекстное меню */

@@ -1,0 +1,54 @@
+/* TitleBar.css */
+.title-bar {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  padding: 5px 5px;  
+  -webkit-app-region: drag;
+  user-select: none;
+}
+
+.title-bar-drag-region {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  -webkit-app-region: drag;
+}
+
+.title-bar-title {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.title-bar-controls {
+  display: flex;
+  -webkit-app-region: no-drag;
+  gap:3px;
+}
+
+.title-bar-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 24px;
+  border: none;
+  border-radius: 5px;
+  background: transparent;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+
+.title-bar-button:hover {
+  background-color: #2C2C2C;
+}
+
+.title-bar-icon {
+  width: 14px;
+  height: 14px;
+}
+
+.title-bar-close:hover {
+  background-color: #e81123;
+}
