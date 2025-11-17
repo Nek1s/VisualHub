@@ -4,12 +4,15 @@ import './App.css';
 import Leftbar from "./components/Leftbar/Leftbar";
 import Rightbar from "./components/Rightbar/Rightbar";
 import FileUpload from './components/FileUpload/FileUpload';
+import Gallery from './components/Gallery/Gallery';
 import TitleBar from './components/TitleBar/TitleBar';
 
 function App() {
   const [selectedFolderId, setSelectedFolderId] = useState(1);
+  const [selectedImage, setSelectedImage] = useState(null);
   const [showAddFolderModal, setShowAddFolderModal] = useState(false);
   const [newFolderName, setNewFolderName] = useState('');
+  const [galleryKey, setGalleryKey] = useState(0); // Для принудительного обновления gallery
 
   const handleAddFolder = () => {
     setShowAddFolderModal(true);
@@ -19,6 +22,11 @@ function App() {
   const handleCloseModal = () => {
     setShowAddFolderModal(false);
     setNewFolderName('');
+  };
+
+  const handleUploadComplete = () => {
+    // Принудительно обновляем Gallery
+    setGalleryKey(prev => prev + 1);
   };
 
   return (
@@ -34,12 +42,22 @@ function App() {
           onFolderNameChange={setNewFolderName}
         />
         <div className="app-content">
-          <FileUpload 
-            folderId={selectedFolderId} 
-            onAddFolder={handleAddFolder}
-          />
+          <div className="app-upload-section">
+            <FileUpload
+              folderId={selectedFolderId}
+              onAddFolder={handleAddFolder}
+              onUploadComplete={handleUploadComplete}
+            />
+          </div>
+          <div className="app-gallery-section">
+            <Gallery
+              key={galleryKey}
+              folderId={selectedFolderId}
+              onImageSelect={setSelectedImage}
+            />
+          </div>
         </div>
-        <Rightbar />
+        <Rightbar selectedImage={selectedImage} />
       </div>
     </div>
   );

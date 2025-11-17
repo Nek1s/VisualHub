@@ -113,10 +113,19 @@ class Leftbar extends React.Component {
         }));
       
       const customFolders = allFolders.filter(folder => folder.id > 3);
-      
-      this.setState({ 
-        systemFolders,
-        customFolders 
+      // Добавляем count для всех папок
+      const updatedSystemFolders = systemFolders.map(folder => ({
+        ...folder,
+        count: folder.imageCount || 0
+      }));
+      const updatedCustomFolders = customFolders.map(folder => ({
+        ...folder,
+        count: folder.imageCount || 0
+      }));
+
+      this.setState({
+        systemFolders: updatedSystemFolders,
+        customFolders: updatedCustomFolders
       });
     } catch (err) {
       console.log("Папки ещё не готовы");

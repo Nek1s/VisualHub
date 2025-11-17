@@ -36,7 +36,7 @@ ipcMain.handle('upload-image', async (event, fileBuffer, fileName, folderId) => 
   try {
     console.log('Получен запрос на загрузку:', fileName, 'в папку', folderId);
 
-    const result = await ImageQueries.addImage(fileBuffer, fileName, folderId, CONSTANTS.IMAGES_DIR, CONSTANTS.THUMBS_DIR);
+    const result = await ImageQueries.addImage(fileBuffer, fileName, folderId, path.dirname(CONSTANTS.IMAGES_DIR));
 
     console.log('Загружено успешно, ID:', result.id);
     return { success: true, id: result.id };
@@ -65,6 +65,10 @@ ipcMain.handle('get-images', async (event, folderId) => {
  */
 ipcMain.handle('get-image-url', (event, imagePath) => {
   console.log('URL для:', imagePath);
+  if (!imagePath) {
+    console.error('Путь к изображению не задан');
+    return '';
+  }
   return `file://${path.resolve(imagePath)}`;
 });
 

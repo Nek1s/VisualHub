@@ -16,14 +16,26 @@
 
 .app-content {
   display: flex;
+  flex-direction: column;
   height: 100%;
   width: 100%;
   margin-bottom: 20px;
-  align-items: center;
   background-color: #181818;
   border: 1px solid #242424;
   border-radius: 20px;
+  overflow: hidden;
+}
 
+.app-upload-section {
+  flex-shrink: 0;
+  border-bottom: 1px solid #242424;
+  background-color: #181818;
+}
+
+.app-gallery-section {
+  flex: 1;
+  background-color: #0f0f0f;
+  overflow: hidden;
 }
 
 .App-logo {
