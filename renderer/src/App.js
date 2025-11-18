@@ -12,7 +12,8 @@ function App() {
   const [selectedImage, setSelectedImage] = useState(null);
   const [showAddFolderModal, setShowAddFolderModal] = useState(false);
   const [newFolderName, setNewFolderName] = useState('');
-  const [galleryKey, setGalleryKey] = useState(0); // Для принудительного обновления gallery
+  const [galleryKey, setGalleryKey] = useState(0);
+  const [hasImages, setHasImages] = useState(false);
 
   const handleAddFolder = () => {
     setShowAddFolderModal(true);
@@ -24,9 +25,13 @@ function App() {
     setNewFolderName('');
   };
 
-  const handleUploadComplete = () => {
-    // Принудительно обновляем Gallery
+  const handleUploadComplete = (images) => {
+    setHasImages(images && images.length > 0);
     setGalleryKey(prev => prev + 1);
+  };
+
+  const handleGalleryUpdate = (images) => {
+    setHasImages(images && images.length > 0);
   };
 
   return (
@@ -42,18 +47,21 @@ function App() {
           onFolderNameChange={setNewFolderName}
         />
         <div className="app-content">
-          <div className="app-upload-section">
-            <FileUpload
-              folderId={selectedFolderId}
-              onAddFolder={handleAddFolder}
-              onUploadComplete={handleUploadComplete}
-            />
-          </div>
+          {/* FileUpload теперь фиксированный поверх всего */}
+          <FileUpload
+            folderId={selectedFolderId}
+            onAddFolder={handleAddFolder}
+            onUploadComplete={handleUploadComplete}
+            hasImages={hasImages}
+          />
+          
+          {/* Gallery отображается под FileUpload */}
           <div className="app-gallery-section">
             <Gallery
               key={galleryKey}
               folderId={selectedFolderId}
               onImageSelect={setSelectedImage}
+              onImagesLoaded={handleGalleryUpdate}
             />
           </div>
         </div>
