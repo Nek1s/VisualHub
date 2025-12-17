@@ -133,6 +133,18 @@
   width: 50%;
 }
 
+.upload-buttons {
+  margin-top: 5px;
+  display: flex;
+  width: 100%;
+  gap: 5px;
+  height: auto;
+}
+
+.upload-content__add-button {
+  width: 50%;
+}
+
 .upload-icon {
   color: #666;
 }
