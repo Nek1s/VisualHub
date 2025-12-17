@@ -1,26 +1,93 @@
-.file-upload {
-  margin: 0 auto;
-  width: 100%;
-  height: 100%;
+/* ===== ОСНОВНЫЕ СТИЛИ OVERLAY ===== */
+.file-upload-overlay {
+  position: fixed;
+  top: 34px;
+  left: 245px;
+  right: 245px;
+  bottom: 14px;
+  z-index: 999;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 }
 
-.upload-area {
+/* ===== РЕЖИМ БЕЗ ИЗОБРАЖЕНИЙ (ПОЛНЫЙ) ===== */
+.file-upload-overlay.no-images {
+  /* В этом режиме всегда активен и виден */
+  pointer-events: auto;
+}
+
+.upload-area.no-images {
   display: flex;
   justify-content: center;
+  align-items: center;
   border: none;
   border-radius: 20px;
-  align-content: center;
-  height: 100%;
-  transition: all 0.3s ease;
-  font-size: 16;
+  font-size: 16px;
   font-weight: 500;
   color: #fff;
+  pointer-events: auto;
+  
+  width: 100%;
+  height: 100%;
+  margin: 0px 15px;
+  
+  background-color: #181818;
+  border: 1px solid #242424;
+  transition: all 0.3s ease;
+
 }
 
-.upload-area.dragging {
-  background-color: #232323;
+.upload-area.no-images.dragging {
+  background-color: #1D1D1D;
+  border:1px solid #565656;
 }
 
+/* ===== РЕЖИМ С ИЗОБРАЖЕНИЯМИ (ТОЛЬКО ПРИ DRAG) ===== */
+.file-upload-overlay.has-images {
+  /* По умолчанию НЕ блокируем события и невидимы */
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+/* Активируем только при drag */
+.file-upload-overlay.has-images.drag-active {
+  /* Только opacity, НЕ pointer-events: auto */
+  opacity: 1;
+}
+
+.upload-area.has-images {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border: none;
+  border-radius: 20px;
+  font-size: 16px;
+  font-weight: 500;
+  color: #ffffff;
+  
+  /* Занимает всю область но НЕ блокирует события мыши */
+  width: 100%;
+  height: 100%;
+  margin: 0px 15px;
+  
+  background-color: rgba(24, 24, 24, 0.9);
+  border: 1px solid #242424;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  
+  /* Ключевое изменение: НЕ блокируем события мыши */
+  pointer-events: none;
+}
+
+/* Но включаем события ТОЛЬКО когда активно перетаскивание */
+.upload-area.has-images.dragging {
+  pointer-events: auto;
+}
+
+/* ===== ОБЩИЕ СТИЛИ КОНТЕНТА ===== */
 .upload-content {
   width: 265px;
   display: flex;
@@ -36,6 +103,34 @@
   font-weight: 600;
   line-height: 1;
   margin: 0px;
+  color: #fff;
+}
+
+.upload-hint {
+  font-size: 11px;
+  font-weight: 400;
+  width: 162px;
+  line-height: 1.2;
+  color: #858585;
+  text-align: center;
+}
+
+/* Кнопки */
+.upload-buttons {
+  margin-top: 5px;
+  display: flex;
+  width: 100%;
+  gap: 5px;
+  height: auto;
+}
+
+/* В режиме с изображениями скрываем кнопки */
+.upload-area.has-images .upload-buttons {
+  display: none;
+}
+
+.upload-content__add-button {
+  width: 50%;
 }
 
 .upload-buttons {
@@ -58,21 +153,30 @@
   color: #007bff;
 }
 
-.upload-hint {
-  font-size: 11px;
-  font-weight: 400;
-  width: 162px;
-  line-height: 1.2;
-  color: #858585;
+/* ===== СПИСОК ФАЙЛОВ ===== */
+.files-list-overlay {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #141414;
+  border: 1px solid #3D3D3D;
+  border-radius: 20px;
+  padding: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  max-width: 400px;
+  width: 90%;
+  pointer-events: auto;
+  z-index: 1001;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 }
 
-.files-list {
-  margin-top: 10px;
-}
-
-.files-list h3 {
+.files-list-overlay h3 {
   margin-bottom: 15px;
-  color: #333;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
 }
 
 .file-item {
@@ -83,7 +187,7 @@
   border: 1px solid #3D3D3D;
   border-radius: 20px;
   margin-bottom: 10px;
-  background-color: #232323;
+  background-color: #181818;
 }
 
 .file-info {
@@ -96,11 +200,11 @@
 .file-name {
   font-weight: bold;
   color: #ffffff;
+  font-size: 12px;
 }
 
-.file-size,
-.file-type {
-  font-size: 12px;
+.file-size {
+  font-size: 10px;
   color: #666;
 }
 
@@ -114,7 +218,7 @@
   position: relative;
   width: 100px;
   height: 20px;
-  background-color: #f0f0f0;
+  background-color: #3D3D3D;
   border-radius: 10px;
   overflow: hidden;
 }
@@ -131,8 +235,14 @@
   left: 50%;
   transform: translate(-50%, -50%);
   font-size: 10px;
-  color: #333;
+  color: #fff;
   font-weight: bold;
+}
+
+.upload-complete {
+  color: #28a745;
+  font-size: 12px;
+  font-weight: 500;
 }
 
 .remove-btn {
@@ -158,43 +268,56 @@
   cursor: not-allowed;
 }
 
-.upload-actions {
-  display: flex;
-  gap: 10px;
-  margin-top: 20px;
-  justify-content: center;
+/* Анимации */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
-.upload-btn,
-.clear-btn {
-  padding: 10px 20px;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 14px;
-  transition: background-color 0.3s ease;
+.file-upload-overlay {
+  animation: fadeIn 0.3s ease;
 }
 
-.upload-btn {
-  background-color: #007bff;
-  color: white;
+/* Адаптивность */
+@media (max-width: 768px) {
+  .upload-area {
+    width: calc(100% - 40px);
+    height: calc(100% - 40px);
+    margin: 20px;
+  }
+  
+  .upload-content {
+    width: 200px;
+  }
+  
+  .upload-content h1 {
+    font-size: 18px;
+  }
+  
+  .files-list-overlay {
+    max-width: 90%;
+    bottom: 15px;
+  }
 }
 
-.upload-btn:hover:not(:disabled) {
-  background-color: #0056b3;
-}
-
-.clear-btn {
-  background-color: #6c757d;
-  color: white;
-}
-
-.clear-btn:hover:not(:disabled) {
-  background-color: #545b62;
-}
-
-.upload-btn:disabled,
-.clear-btn:disabled {
-  background-color: #ccc;
-  cursor: not-allowed;
+@media (max-width: 480px) {
+  .upload-area {
+    width: calc(100% - 20px);
+    height: calc(100% - 20px);
+    margin: 10px;
+    border-radius: 15px;
+  }
+  
+  .upload-content {
+    width: 180px;
+  }
+  
+  .upload-content h1 {
+    font-size: 16px;
+  }
+  
+  .upload-hint {
+    font-size: 10px;
+    width: 140px;
+  }
 }

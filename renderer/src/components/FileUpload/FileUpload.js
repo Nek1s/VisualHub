@@ -1,13 +1,77 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import './FileUpload.css';
 import AddFolderButton from '../AddFolderButton/AddFolderButton';
 import ImportImagesButton from '../ImportImagesButton/ImportImagesButton';
 
-const FileUpload = ({ folderId = 2, onUploadComplete, onAddFolder }) => {
+const FileUpload = ({ folderId = 2, onUploadComplete, onAddFolder, hasImages = false }) => {
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [isDragging, setIsDragging] = useState(false);
   const [uploadProgress, setUploadProgress] = useState({});
+  const [isDragOverApp, setIsDragOverApp] = useState(false);
   const fileInputRef = useRef(null);
+  const dragCounter = useRef(0);
+
+  // Отслеживаем drag over всего приложения
+  useEffect(() => {
+    const handleDocumentDragOver = (event) => {
+      event.preventDefault();
+    };
+
+    const handleDocumentDragEnter = (event) => {
+      event.preventDefault();
+      // Проверяем, что перетаскиваются файлы (а не текст или другие элементы)
+      if (event.dataTransfer.types.includes('Files')) {
+        dragCounter.current++;
+        if (dragCounter.current === 1) {
+          setIsDragOverApp(true);
+        }
+      }
+    };
+
+    const handleDocumentDragLeave = (event) => {
+      event.preventDefault();
+      if (!event.relatedTarget || event.relatedTarget === document.documentElement) {
+        dragCounter.current = 0;
+        setIsDragOverApp(false);
+        setIsDragging(false);
+      } else {
+        dragCounter.current--;
+        if (dragCounter.current <= 0) {
+          dragCounter.current = 0;
+          setIsDragOverApp(false);
+          setIsDragging(false);
+        }
+      }
+    };
+
+    // ГЛОБАЛЬНЫЙ обработчик drop - ключевое изменение!
+    const handleDocumentDrop = (event) => {
+      event.preventDefault();
+      
+      const files = Array.from(event.dataTransfer.files);
+      
+      // Если есть файлы И мы в режиме с изображениями И был активен drag
+      if (files.length > 0 && hasImages && isDragOverApp) {
+        handleFilesAdded(files, 'Global Drag and Drop');
+      }
+      
+      dragCounter.current = 0;
+      setIsDragOverApp(false);
+      setIsDragging(false);
+    };
+
+    document.addEventListener('dragover', handleDocumentDragOver);
+    document.addEventListener('dragenter', handleDocumentDragEnter);
+    document.addEventListener('dragleave', handleDocumentDragLeave);
+    document.addEventListener('drop', handleDocumentDrop);
+
+    return () => {
+      document.removeEventListener('dragover', handleDocumentDragOver);
+      document.removeEventListener('dragenter', handleDocumentDragEnter);
+      document.removeEventListener('dragleave', handleDocumentDragLeave);
+      document.removeEventListener('drop', handleDocumentDrop);
+    };
+  }, [hasImages, isDragOverApp]); // Добавляем зависимости
 
   // Функция для логирования информации о файлах
   const logFilesInfo = (files, method) => {
@@ -41,12 +105,10 @@ const FileUpload = ({ folderId = 2, onUploadComplete, onAddFolder }) => {
   const handleFilesAdded = (files, method) => {
     setSelectedFiles(prev => [...prev, ...files]);
     logFilesInfo(files, method);
-    
-    // Автоматическая загрузка файлов
     simulateFileUpload(files);
   };
 
-  // Обработчик drag and drop
+  // Обработчик drag and drop для конкретной области
   const handleDragOver = (event) => {
     event.preventDefault();
     setIsDragging(true);
@@ -54,20 +116,22 @@ const FileUpload = ({ folderId = 2, onUploadComplete, onAddFolder }) => {
 
   const handleDragLeave = (event) => {
     event.preventDefault();
-    setIsDragging(false);
+    if (!event.currentTarget.contains(event.relatedTarget)) {
+      setIsDragging(false);
+    }
   };
 
   const handleDrop = (event) => {
     event.preventDefault();
     setIsDragging(false);
+    setIsDragOverApp(false);
+    dragCounter.current = 0;
     
     const files = Array.from(event.dataTransfer.files);
     if (files.length > 0) {
       handleFilesAdded(files, 'Drag and Drop');
     }
   };
-
-  // Убрали handleAreaClick, так как клик по области больше не открывает диалог
 
   const simulateFileUpload = async (files) => {
     console.log('Начало автоматической загрузки файлов...');
@@ -136,33 +200,41 @@ const FileUpload = ({ folderId = 2, onUploadComplete, onAddFolder }) => {
   };
 
   return (
-    <div className="file-upload">      
-      {/* Область для drag and drop - теперь без onClick */}
+    <div className={`file-upload-overlay ${hasImages ? 'has-images' : 'no-images'} ${isDragOverApp ? 'drag-active' : ''}`}>
+      {/* Область для drag and drop */}
       <div
-        className={`upload-area ${isDragging ? 'dragging' : ''}`}
+        className={`upload-area ${isDragging ? 'dragging' : ''} ${hasImages ? 'has-images' : 'no-images'}`}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
-        // onClick убран - клик по области больше не открывает диалог
       >
         <div className="upload-content">
+          {/* Заголовок */}
           <h1>Upload files</h1>
+          
+          {/* Подсказка */}
           <span className="upload-hint">
-            Drag and drop your files here or use the Import button below
+            {hasImages 
+              ? 'Drop files anywhere to upload' 
+              : 'Drag and drop your files here or use the Import button below'
+            }
           </span>
-          <div className='upload-buttons'>
-            <AddFolderButton
-              className="upload-content__add-button"
-              onClick={onAddFolder}
-              label="Create folder"
-              icon="+"
-            />
-            
-            <ImportImagesButton
-              onFilesSelected={handleImportFiles}
-            />
-            
-          </div>
+          
+          {/* Кнопки показываются только когда нет изображений */}
+          {!hasImages && (
+            <div className='upload-buttons'>
+              <AddFolderButton
+                className="upload-content__add-button"
+                onClick={onAddFolder}
+                label="Create folder"
+                icon="+"
+              />
+              
+              <ImportImagesButton
+                onFilesSelected={handleImportFiles}
+              />
+            </div>
+          )}
         </div>
         
         {/* Input для кнопки Import - остается скрытым */}
@@ -178,7 +250,7 @@ const FileUpload = ({ folderId = 2, onUploadComplete, onAddFolder }) => {
 
       {/* Список выбранных файлов */}
       {selectedFiles.length > 0 && (
-        <div className="files-list">
+        <div className="files-list-overlay">
           <h3>Selected Files ({selectedFiles.length})</h3>
           {selectedFiles.map((file, index) => (
             <div key={index} className="file-item">

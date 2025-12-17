@@ -31,6 +31,9 @@ CREATE TABLE IF NOT EXISTS images (
   filePath TEXT NOT NULL,
   fileName TEXT,
   folderId INTEGER,
+  width INTEGER DEFAULT 0,
+  height INTEGER DEFAULT 0,
+  fileSize INTEGER DEFAULT 0,
   thumbnailPath TEXT,
   createdAt TEXT DEFAULT CURRENT_TIMESTAMP,
   modifiedAt TEXT DEFAULT CURRENT_TIMESTAMP,
@@ -56,8 +59,14 @@ CREATE TABLE IF NOT EXISTS image_tags (
 `).run();
 
 db.prepare(`
-  INSERT OR IGNORE INTO folders (id, name) VALUES 
+  INSERT OR IGNORE INTO folders (id, name) VALUES
   (1, 'All'), (2, 'Uncategorized'), (3, 'Trash')
+`).run();
+
+// Обновить существующие записи без createdAt
+db.prepare(`
+  UPDATE images SET createdAt = datetime('now'), modifiedAt = datetime('now')
+  WHERE createdAt IS NULL OR createdAt = ''
 `).run();
 
 module.exports = db;

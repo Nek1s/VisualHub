@@ -190,23 +190,80 @@ class Rightbar extends React.Component {
   };
 
   componentDidUpdate(prevProps, prevState) {
+    if (prevProps.selectedImage !== this.props.selectedImage && this.props.selectedImage) {
+      const image = this.props.selectedImage;
+      console.log('Rightbar обновился для изображения:', image);
+      console.log('width:', image.width, 'height:', image.height, 'fileSize:', image.fileSize, 'createdAt:', image.createdAt);
+
+      this.setState({
+        title: image.fileName || '',
+        description: '',
+        link: '',
+        imageProperties: {
+          dimension: image.width && image.height && image.width > 0 && image.height > 0 ? `${image.width} × ${image.height}` : 'Unknown',
+          size: image.fileSize && image.fileSize > 0 ? this.formatFileSize(image.fileSize) : 'Unknown',
+          type: this.getFileType(image.fileName),
+          dataImported: image.createdAt ? new Date(image.createdAt).toLocaleDateString() : 'Unknown'
+        }
+      });
+    } else if (!this.props.selectedImage && prevProps.selectedImage) {
+      // Если изображение снято, сбросить поля
+      this.setState({
+        title: '',
+        description: '',
+        link: '',
+        imageProperties: {
+          dimension: '1920 × 1080',
+          size: '2.4 MB',
+          type: 'JPEG',
+          dataImported: '2024-01-15'
+        }
+      });
+    }
+
     if (prevState.description !== this.state.description) {
       this.adjustTextareaHeight();
     }
   }
 
+  formatFileSize = (bytes) => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  };
+
+  getFileType = (filename) => {
+    if (!filename) return 'Unknown';
+    const ext = filename.split('.').pop().toUpperCase();
+    return ext;
+  };
+
+  formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('ru-RU', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    });
+  };
+
   render() {
-    const { 
-      title, 
-      description, 
-      link, 
-      isCopied, 
-      imageProperties, 
-      selectedFolders, 
+    const {
+      title,
+      description,
+      link,
+      isCopied,
+      imageProperties,
+      selectedFolders,
       availableFolders,
       isFolderMenuOpen,
       newFolderName
     } = this.state;
+
+    const { selectedImage } = this.props;
+    const currentImagePath = selectedImage ? selectedImage.url : undefined;
 
     // Папки доступные для добавления (исключая уже выбранные)
     const availableToAdd = availableFolders.filter(folder => !selectedFolders.includes(folder));
@@ -214,7 +271,7 @@ class Rightbar extends React.Component {
     return (
       <div className='Rightbar'>
         <div className="rightbar-content">
-          <ImagePreview />
+          <ImagePreview imagePath={currentImagePath} />
           
           <div className="rightbar-section">
             <label className="rightbar-label">Name</label>

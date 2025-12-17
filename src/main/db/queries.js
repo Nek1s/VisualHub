@@ -16,17 +16,48 @@ const ImageQueries = {
     `).all();
   },
 
-  addImage: (fileBuffer, fileName, folderId, imagesDir, thumbsDir) => {
-    const filePath = path.join(imagesDir, fileName);
+  addImage: async (fileBuffer, fileName, folderId, baseDir) => {
+    // Находим папку для сохранения
+    let folderPath;
+    if (folderId === 1 || folderId === 2 || folderId === 3) {
+      // Системные папки сохраняются в общую директорию images
+      folderPath = path.join(baseDir, 'images');
+    } else {
+      // Пользовательские папки сохраняют в свою директорию
+      const folder = db.prepare('SELECT * FROM folders WHERE id = ?').get(folderId);
+      folderPath = folder ? folder.path : path.join(baseDir, 'images');
+    }
+
+    if (!fs.existsSync(folderPath)) {
+      fs.mkdirSync(folderPath, { recursive: true });
+    }
+
+    const thumbsDir = path.join(baseDir, 'thumbs');
+    if (!fs.existsSync(thumbsDir)) {
+      fs.mkdirSync(thumbsDir, { recursive: true });
+    }
+
+    const filePath = path.join(folderPath, fileName);
     const thumbnailPath = path.join(thumbsDir, fileName);
 
     // Сохраняем файл
     fs.writeFileSync(filePath, fileBuffer);
 
+    // Получаем метаданные изображения с помощью sharp
+    let width = 0, height = 0, fileSize = fileBuffer.length;
+    try {
+      const sharp = require('sharp');
+      const metadata = await sharp(filePath).metadata();
+      width = metadata.width || 0;
+      height = metadata.height || 0;
+    } catch (err) {
+      console.warn('Не удалось получить метаданные изображения:', err.message);
+    }
+
     const result = db.prepare(`
-      INSERT INTO images (filePath, fileName, folderId, thumbnailPath)
-      VALUES (?, ?, ?, ?)
-    `).run(filePath, fileName, folderId, thumbnailPath);
+      INSERT INTO images (filePath, fileName, folderId, width, height, fileSize, thumbnailPath)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+    `).run(filePath, fileName, folderId, width, height, fileSize, thumbnailPath);
     return { id: result.lastInsertRowid };
   },
 };
@@ -90,28 +121,30 @@ const FolderQueries = {
    */
   getAllWithCounts: (sortBy = 'id') => {
     // Сначала получаем системные папки (id <= 3)
-    const systemFolders = db.prepare(`
-      SELECT
-        f.*,
-        COUNT(i.id) as imageCount
-      FROM folders f
-      LEFT JOIN images i ON f.id = i.folderId
-      WHERE f.id <= 3
-      GROUP BY f.id
-      ORDER BY f.id
-    `).all();
+    const allImageCount = db.prepare('SELECT COUNT(*) as count FROM images WHERE folderId != 3').get().count || 0;
+    const uncategorizedCount = db.prepare(`
+      SELECT COUNT(*) as count FROM images
+      WHERE (folderId IS NULL OR folderId = 2) AND folderId != 3
+    `).get().count || 0;
+    const trashCount = db.prepare('SELECT COUNT(*) as count FROM images WHERE folderId = 3').get().count || 0;
+
+    const systemFolders = [
+      { id: 1, name: 'All', imageCount: allImageCount },
+      { id: 2, name: 'Uncategorized', imageCount: uncategorizedCount },
+      { id: 3, name: 'Trash', imageCount: trashCount }
+    ];
 
     // Затем пользовательские папки с сортировкой
     let orderBy;
     switch (sortBy) {
       case 'name':
-        orderBy = 'f.name ASC';
+        orderBy = 'name ASC';
         break;
       case 'date':
-        orderBy = 'f.createdAt DESC';
+        orderBy = 'createdAt DESC';
         break;
       default:
-        orderBy = 'f.id ASC';
+        orderBy = 'id ASC';
     }
 
     const userFolders = db.prepare(`
