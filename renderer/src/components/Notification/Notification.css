@@ -1,0 +1,75 @@
+/* src/components/Notification/Notification.css */
+.notification {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  padding: 12px 20px;
+  border-radius: 8px;
+  background-color: #28a745;
+  color: white;
+  font-size: 14px;
+  z-index: 9999;
+  animation: slideIn 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  min-width: 200px;
+}
+
+.notification-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+}
+
+.notification-message {
+  flex: 1;
+}
+
+.notification-close {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 20px;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+}
+
+.notification-close:hover {
+  opacity: 0.8;
+}
+
+.notification--success {
+  background-color: #28a745;
+}
+
+.notification--error {
+  background-color: #dc3545;
+}
+
+.notification--warning {
+  background-color: #ffc107;
+  color: #212529;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideOut {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+}

@@ -3,23 +3,28 @@ import './FileUpload.css';
 import AddFolderButton from '../AddFolderButton/AddFolderButton';
 import ImportImagesButton from '../ImportImagesButton/ImportImagesButton';
 
-const FileUpload = ({ folderId = 2, onUploadComplete, onAddFolder, hasImages = false }) => {
+const FileUpload = ({ folderId, onAddFolder, onUploadComplete, hasImages }) => {
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [isDragging, setIsDragging] = useState(false);
   const [uploadProgress, setUploadProgress] = useState({});
   const [isDragOverApp, setIsDragOverApp] = useState(false);
   const fileInputRef = useRef(null);
   const dragCounter = useRef(0);
+  const isTrashFolder = folderId === 3;
 
+  // --- ИСПРАВЛЕНИЕ: useEffect перенесен ВВЕРХ, до любого return ---
+  
   // Отслеживаем drag over всего приложения
   useEffect(() => {
+    // Если мы в корзине, не навешиваем слушатели или сразу выходим
+    if (isTrashFolder) return;
+
     const handleDocumentDragOver = (event) => {
       event.preventDefault();
     };
 
     const handleDocumentDragEnter = (event) => {
       event.preventDefault();
-      // Проверяем, что перетаскиваются файлы (а не текст или другие элементы)
       if (event.dataTransfer.types.includes('Files')) {
         dragCounter.current++;
         if (dragCounter.current === 1) {
@@ -44,13 +49,11 @@ const FileUpload = ({ folderId = 2, onUploadComplete, onAddFolder, hasImages = f
       }
     };
 
-    // ГЛОБАЛЬНЫЙ обработчик drop - ключевое изменение!
     const handleDocumentDrop = (event) => {
       event.preventDefault();
       
       const files = Array.from(event.dataTransfer.files);
       
-      // Если есть файлы И мы в режиме с изображениями И был активен drag
       if (files.length > 0 && hasImages && isDragOverApp) {
         handleFilesAdded(files, 'Global Drag and Drop');
       }
@@ -71,7 +74,9 @@ const FileUpload = ({ folderId = 2, onUploadComplete, onAddFolder, hasImages = f
       document.removeEventListener('dragleave', handleDocumentDragLeave);
       document.removeEventListener('drop', handleDocumentDrop);
     };
-  }, [hasImages, isDragOverApp]); // Добавляем зависимости
+  }, [hasImages, isDragOverApp, isTrashFolder]); // Добавлен isTrashFolder в зависимости
+
+  // --- Конец useEffect ---
 
   // Функция для логирования информации о файлах
   const logFilesInfo = (files, method) => {
@@ -88,7 +93,6 @@ const FileUpload = ({ folderId = 2, onUploadComplete, onAddFolder, hasImages = f
     console.log('---');
   };
 
-  // Обработчик выбора файлов через диалог
   const handleFileSelect = (event) => {
     const files = Array.from(event.target.files);
     if (files.length > 0) {
@@ -96,19 +100,16 @@ const FileUpload = ({ folderId = 2, onUploadComplete, onAddFolder, hasImages = f
     }
   };
 
-  // Обработчик выбора файлов через кнопку Import
   const handleImportFiles = (files) => {
     handleFilesAdded(files, 'кнопка Import');
   };
 
-  // Общая функция для обработки добавленных файлов
   const handleFilesAdded = (files, method) => {
     setSelectedFiles(prev => [...prev, ...files]);
     logFilesInfo(files, method);
     simulateFileUpload(files);
   };
 
-  // Обработчик drag and drop для конкретной области
   const handleDragOver = (event) => {
     event.preventDefault();
     setIsDragging(true);
@@ -147,7 +148,6 @@ const FileUpload = ({ folderId = 2, onUploadComplete, onAddFolder, hasImages = f
       const globalIndex = selectedFiles.length + i;
       const file = files[i];
       
-      // === РЕАЛЬНАЯ ЗАГРУЗКА ===
       try {
         const buffer = await file.arrayBuffer();
         const array = new Uint8Array(buffer);
@@ -156,7 +156,6 @@ const FileUpload = ({ folderId = 2, onUploadComplete, onAddFolder, hasImages = f
         if (result.success) {
           console.log(`Успешно загружено: ${file.name} (ID: ${result.id})`);
 
-          // Обновляем галерею
           if (window.electronAPI?.getImages && typeof onUploadComplete === 'function') {
             const images = await window.electronAPI.getImages(folderId);
             onUploadComplete(images);
@@ -167,9 +166,7 @@ const FileUpload = ({ folderId = 2, onUploadComplete, onAddFolder, hasImages = f
       } catch (err) {
         console.error(`Ошибка API:`, err);
       }
-      // ---------- КОНЕЦ ЗАГРУЗКИ ----------
 
-      // Симуляция прогресса
       for (let progress = 0; progress <= 100; progress += 20) {
         await new Promise(resolve => setTimeout(resolve, 150));
         setUploadProgress(prev => ({
@@ -190,7 +187,6 @@ const FileUpload = ({ folderId = 2, onUploadComplete, onAddFolder, hasImages = f
     }, 2000);
   };
 
-  // Форматирование размера файла
   const formatFileSize = (bytes) => {
     if (bytes === 0) return '0 Bytes';
     const k = 1024;
@@ -199,9 +195,24 @@ const FileUpload = ({ folderId = 2, onUploadComplete, onAddFolder, hasImages = f
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
+  // --- ИСПРАВЛЕНИЕ: Условный рендеринг перемещен СЮДА, после всех хуков и логики ---
+  
+  if (isTrashFolder) {
+    return (
+      <div className="file-upload-container">
+        <div className="upload-disabled-message">
+          <svg xmlns="http://www.w3.org/2000/svg" className="upload-disabled-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.694-.833-2.464 0L4.332 16.5c-.77.833.192 2.5 1.732 2.5z"/>
+          </svg>
+          <p>Загрузка в корзину невозможна</p>
+          <p className="upload-disabled-sub">Выберите другую папку для загрузки изображений</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className={`file-upload-overlay ${hasImages ? 'has-images' : 'no-images'} ${isDragOverApp ? 'drag-active' : ''}`}>
-      {/* Область для drag and drop */}
       <div
         className={`upload-area ${isDragging ? 'dragging' : ''} ${hasImages ? 'has-images' : 'no-images'}`}
         onDragOver={handleDragOver}
@@ -209,10 +220,7 @@ const FileUpload = ({ folderId = 2, onUploadComplete, onAddFolder, hasImages = f
         onDrop={handleDrop}
       >
         <div className="upload-content">
-          {/* Заголовок */}
           <h1>Upload files</h1>
-          
-          {/* Подсказка */}
           <span className="upload-hint">
             {hasImages 
               ? 'Drop files anywhere to upload' 
@@ -220,7 +228,6 @@ const FileUpload = ({ folderId = 2, onUploadComplete, onAddFolder, hasImages = f
             }
           </span>
           
-          {/* Кнопки показываются только когда нет изображений */}
           {!hasImages && (
             <div className='upload-buttons'>
               <AddFolderButton
@@ -237,7 +244,6 @@ const FileUpload = ({ folderId = 2, onUploadComplete, onAddFolder, hasImages = f
           )}
         </div>
         
-        {/* Input для кнопки Import - остается скрытым */}
         <input
           ref={fileInputRef}
           type="file"
@@ -248,7 +254,6 @@ const FileUpload = ({ folderId = 2, onUploadComplete, onAddFolder, hasImages = f
         />
       </div>
 
-      {/* Список выбранных файлов */}
       {selectedFiles.length > 0 && (
         <div className="files-list-overlay">
           <h3>Selected Files ({selectedFiles.length})</h3>

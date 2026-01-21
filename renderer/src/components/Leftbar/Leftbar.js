@@ -28,7 +28,7 @@ class Leftbar extends React.Component {
         { 
           id: 3, 
           name: "Trash", 
-          count: 0, 
+          count: this.props.trashCount || 0,  // Используем пропс
           icon: <TrashIcon className="folder-icon" />, 
           editable: false 
         },
@@ -97,12 +97,12 @@ class Leftbar extends React.Component {
         3: { 
           id: 3, 
           name: "Trash", 
-          count: 0, 
+          count: this.props.trashCount || 0,  // Используем пропс
           icon: <TrashIcon className="folder-icon" />, 
           editable: false 
         },
       };
-      
+
       const systemFolders = allFolders
         .filter(folder => folder.id <= 3)
         .map(folder => ({
@@ -179,7 +179,7 @@ class Leftbar extends React.Component {
   renderFolder = (folder) => (
     <Folder
       key={folder.id}
-      initialName={folder.name}
+      initialName={folder.id === 3 ? `${folder.name} (${folder.count})` : folder.name} // Показываем счетчик для корзины
       itemCount={folder.count || 0}
       icon={folder.icon}
       editable={folder.editable !== false}
@@ -218,6 +218,26 @@ class Leftbar extends React.Component {
       onDragOver={(e) => e.preventDefault()}
     />
   );
+  // Добавляем componentDidUpdate для обновления счетчика:
+  componentDidUpdate(prevProps) {
+    // Обновляем счетчик корзины при изменении пропса
+    if (prevProps.trashCount !== this.props.trashCount) {
+      this.setState(prevState => ({
+        systemFolders: prevState.systemFolders.map(folder => 
+          folder.id === 3 ? { ...folder, count: this.props.trashCount } : folder
+        )
+      }));
+    }
+    
+    // Фокусируемся на input при открытии модального окна
+    if (this.props.showAddFolderModal && !prevProps.showAddFolderModal) {
+      setTimeout(() => {
+        if (this.folderNameInputRef.current) {
+          this.folderNameInputRef.current.focus();
+        }
+      }, 100);
+    }
+  }
 
   render() {
     const { systemFolders, customFolders, sortBy } = this.state;
