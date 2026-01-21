@@ -359,3 +359,182 @@
 .folder-menu__list::-webkit-scrollbar-thumb:hover {
   background: #5A5A5A;
 }
+
+.actions-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.action-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  height: 32px;
+  border: 1px solid;
+  border-radius: 6px;
+  background: none;
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.action-button:hover {
+  transform: translateY(-1px);
+}
+
+.action-button:active {
+  transform: translateY(0);
+}
+
+.action-button-icon {
+  width: 14px;
+  height: 14px;
+}
+
+.action-button--delete {
+  border-color: #dc3545;
+  color: #dc3545;
+}
+
+.action-button--delete:hover {
+  background-color: rgba(220, 53, 69, 0.1);
+  border-color: #dc3545;
+}
+
+.action-button--restore {
+  border-color: #28a745;
+  color: #28a745;
+}
+
+.action-button--restore:hover {
+  background-color: rgba(40, 167, 69, 0.1);
+  border-color: #28a745;
+}
+
+.action-button--permanent {
+  border-color: #ff6b6b;
+  color: #ff6b6b;
+}
+
+.action-button--permanent:hover {
+  background-color: rgba(255, 107, 107, 0.1);
+  border-color: #ff6b6b;
+}
+
+/* Стили для уведомлений */
+.notification {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  padding: 12px 20px;
+  border-radius: 8px;
+  background-color: #28a745;
+  color: white;
+  font-size: 14px;
+  z-index: 9999;
+  animation: slideIn 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.notification--error {
+  background-color: #dc3545;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.actions-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.action-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  height: 32px;
+  border: 1px solid;
+  border-radius: 6px;
+  background: none;
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.action-button:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.action-button:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.action-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  border-color: #666;
+  color: #666;
+}
+
+.action-button-icon {
+  width: 14px;
+  height: 14px;
+}
+
+.action-button--rename {
+  border-color: #6f42c1;
+  color: #6f42c1;
+}
+
+.action-button--rename:hover:not(:disabled) {
+  background-color: rgba(111, 66, 193, 0.1);
+  border-color: #6f42c1;
+}
+
+.action-button--delete {
+  border-color: #dc3545;
+  color: #dc3545;
+}
+
+.action-button--delete:hover:not(:disabled) {
+  background-color: rgba(220, 53, 69, 0.1);
+  border-color: #dc3545;
+}
+
+.action-button--restore {
+  border-color: #28a745;
+  color: #28a745;
+}
+
+.action-button--restore:hover:not(:disabled) {
+  background-color: rgba(40, 167, 69, 0.1);
+  border-color: #28a745;
+}
+
+.action-button--permanent {
+  border-color: #ff6b6b;
+  color: #ff6b6b;
+}
+
+.action-button--permanent:hover:not(:disabled) {
+  background-color: rgba(255, 107, 107, 0.1);
+  border-color: #ff6b6b;
+}

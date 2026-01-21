@@ -3,7 +3,22 @@ import './Rightbar.css';
 import InputField from '../InputField/InputField';
 import ImagePreview from '../imagePreview/imagePreview';
 import ExportButton from '../ExportButton/ExportButton';
-import { ReactComponent as FolderIcon } from '../../icons/system_folders/ic_folder.svg';
+
+// Вспомогательная функция для получения имени файла без расширения
+const getFileNameWithoutExtension = (filename) => {
+  if (!filename) return '';
+  const lastDotIndex = filename.lastIndexOf('.');
+  if (lastDotIndex === -1) return filename;
+  return filename.substring(0, lastDotIndex);
+};
+
+// Вспомогательная функция для получения расширения файла
+const getFileExtension = (filename) => {
+  if (!filename) return '';
+  const lastDotIndex = filename.lastIndexOf('.');
+  if (lastDotIndex === -1) return '';
+  return filename.substring(lastDotIndex + 1).toLowerCase();
+};
 
 class Rightbar extends React.Component {
   constructor(props) {
@@ -13,17 +28,24 @@ class Rightbar extends React.Component {
       description: '',
       link: '',
       isCopied: false,
-      selectedFolders: ['Design', 'Inspiration'],
-      availableFolders: ['Design', 'Inspiration', 'Work', 'Personal', 'Archive', 'Projects', 'References'],
+      selectedFolders: [],
+      availableFolders: [],
       isFolderMenuOpen: false,
       newFolderName: '',
       // Данные изображения
       imageProperties: {
-        dimension: '1920 × 1080',
-        size: '2.4 MB',
-        type: 'JPEG',
-        dataImported: '2024-01-15'
-      }
+        dimension: '0 × 0',
+        size: '0 Bytes',
+        type: 'Unknown',
+        dataImported: 'Unknown'
+      },
+      // Состояние для редактирования
+      isEditingTitle: false,
+      isEditingDescription: false,
+      isEditingLink: false,
+      originalTitle: '',
+      originalDescription: '',
+      originalLink: ''
     };
     this.textareaRef = React.createRef();
     this.folderMenuRef = React.createRef();
@@ -48,62 +70,183 @@ class Rightbar extends React.Component {
     }
   };
 
+  componentDidUpdate(prevProps) {
+    // Обновляем данные при смене выбранного изображения
+    if (prevProps.selectedImage !== this.props.selectedImage) {
+      this.loadImageData(this.props.selectedImage);
+    }
+
+    if (prevProps.selectedImage && !this.props.selectedImage) {
+      // Если изображение снято, сбрасываем поля
+      this.resetFields();
+    }
+
+    // Автоподстройка высоты textarea
+    if (this.textareaRef.current) {
+      this.textareaRef.current.style.height = 'auto';
+      this.textareaRef.current.style.height = this.textareaRef.current.scrollHeight + 'px';
+    }
+  }
+
+  loadImageData = (image) => {
+    if (!image) {
+      this.resetFields();
+      return;
+    }
+
+    console.log('Rightbar обновился для изображения:', image);
+
+    // Загружаем теги/папки для изображения
+    this.loadFoldersForImage(image.id);
+
+    // Получаем имя файла без расширения для отображения
+    const fileNameWithoutExt = image.fileName ? getFileNameWithoutExtension(image.fileName) : '';
+    
+    this.setState({
+      title: image.title || fileNameWithoutExt || '',
+      description: image.description || '',
+      link: image.link || '',
+      originalTitle: image.title || fileNameWithoutExt || '',
+      originalDescription: image.description || '',
+      originalLink: image.link || '',
+      imageProperties: {
+        dimension: image.width && image.height ? `${image.width} × ${image.height}` : 'Unknown',
+        size: image.fileSize ? this.formatFileSize(image.fileSize) : 'Unknown',
+        type: this.getFileType(image.fileName),
+        dataImported: image.createdAt ? new Date(image.createdAt).toLocaleDateString() : 'Unknown'
+      }
+    });
+  };
+
+  resetFields = () => {
+    this.setState({
+      title: '',
+      description: '',
+      link: '',
+      selectedFolders: [],
+      imageProperties: {
+        dimension: '0 × 0',
+        size: '0 Bytes',
+        type: 'Unknown',
+        dataImported: 'Unknown'
+      }
+    });
+  };
+
+  loadFoldersForImage = async (imageId) => {
+    // TODO: Реализовать загрузку тегов/папок для изображения из БД
+    // Пока используем заглушку
+    this.setState({
+      selectedFolders: [],
+      availableFolders: ['Design', 'Inspiration', 'Work', 'Personal']
+    });
+  };
+
+  // ============= ОБРАБОТЧИКИ ИЗМЕНЕНИЯ ПОЛЕЙ =============
+
   handleTitleChange = (value) => {
     this.setState({ title: value });
   };
 
   handleDescriptionChange = (value) => {
-    this.setState({ description: value }, () => {
-      this.adjustTextareaHeight();
-    });
+    this.setState({ description: value });
   };
 
   handleLinkChange = (value) => {
     this.setState({ link: value });
   };
 
-  adjustTextareaHeight = () => {
-    const textarea = this.textareaRef.current;
-    if (textarea) {
-      textarea.style.height = 'auto';
-      textarea.style.height = textarea.scrollHeight + 'px';
+  // Сохранение изменений в БД
+  saveFieldToDatabase = async (field, value) => {
+    const { selectedImage, onImageUpdated } = this.props;
+    if (!selectedImage || !window.electronAPI?.updateImageField) return;
+
+    try {
+      const result = await window.electronAPI.updateImageField(selectedImage.id, field, value);
+      if (result.success) {
+        console.log(`Поле ${field} сохранено`);
+        
+        // Оповещаем родительский компонент об обновлении изображения
+        if (onImageUpdated) {
+          onImageUpdated(); // Вызываем без параметров
+        }
+          
+        // Обновляем оригинальные значения
+        if (field === 'title') {
+          this.setState({ originalTitle: value });
+        } else if (field === 'description') {
+          this.setState({ originalDescription: value });
+        } else if (field === 'link') {
+          this.setState({ originalLink: value });
+        }
+        
+        // Показываем уведомление
+        alert('Изменения сохранены');
+      } else {
+        console.error(`Ошибка сохранения поля ${field}:`, result.error);
+        alert(`Ошибка сохранения: ${result.error}`);
+      }
+    } catch (error) {
+      console.error('Ошибка сохранения поля:', error);
+      alert('Ошибка сохранения поля');
     }
   };
 
-  // Открытие/закрытие меню папок
+  handleTitleBlur = () => {
+    if (this.state.title !== this.state.originalTitle && this.state.title.trim() !== '') {
+      this.saveFieldToDatabase('title', this.state.title);
+    }
+  };
+
+  handleDescriptionBlur = () => {
+    if (this.state.description !== this.state.originalDescription) {
+      this.saveFieldToDatabase('description', this.state.description);
+    }
+  };
+
+  handleLinkBlur = () => {
+    if (this.state.link !== this.state.originalLink) {
+      this.saveFieldToDatabase('link', this.state.link);
+    }
+  };
+
+  handleTitleKeyPress = (e) => {
+    if (e.key === 'Enter') {
+      e.target.blur();
+    }
+  };
+
+  // ============= РАБОТА С ПАПКАМИ/ТЕГАМИ =============
+
   toggleFolderMenu = () => {
     this.setState(prevState => ({ 
       isFolderMenuOpen: !prevState.isFolderMenuOpen,
-      newFolderName: '' // очищаем поле при открытии
+      newFolderName: ''
     }));
   };
 
-  // Добавление папки в выбранные
   addFolder = (folderName) => {
     const { selectedFolders, availableFolders } = this.state;
     
     if (!folderName || selectedFolders.includes(folderName)) return;
 
-    // Если папки нет в доступных, добавляем её
-    if (!availableFolders.includes(folderName)) {
-      this.setState(prevState => ({
-        availableFolders: [...prevState.availableFolders, folderName]
-      }));
-    }
+    const newSelectedFolders = [...selectedFolders, folderName];
+    this.setState({ selectedFolders: newSelectedFolders });
 
-    this.setState(prevState => ({
-      selectedFolders: [...prevState.selectedFolders, folderName]
-    }));
+    // TODO: Сохранить связь изображения с папкой/тегом в БД
+    console.log('Добавлена папка:', folderName);
   };
 
-  // Удаление папки из выбранных
   removeFolder = (folderToRemove) => {
-    this.setState(prevState => ({
-      selectedFolders: prevState.selectedFolders.filter(folder => folder !== folderToRemove)
-    }));
+    const newSelectedFolders = this.state.selectedFolders.filter(
+      folder => folder !== folderToRemove
+    );
+    this.setState({ selectedFolders: newSelectedFolders });
+
+    // TODO: Удалить связь изображения с папкой/тегом в БД
+    console.log('Удалена папка:', folderToRemove);
   };
 
-  // Создание новой папки
   handleCreateFolder = () => {
     const { newFolderName } = this.state;
     if (newFolderName.trim()) {
@@ -112,7 +255,6 @@ class Rightbar extends React.Component {
     }
   };
 
-  // Обработчик Enter для создания папки
   handleNewFolderKeyPress = (e) => {
     if (e.key === 'Enter') {
       this.handleCreateFolder();
@@ -122,6 +264,8 @@ class Rightbar extends React.Component {
   handleNewFolderNameChange = (value) => {
     this.setState({ newFolderName: value });
   };
+
+  // ============= РАБОТА С ССЫЛКАМИ =============
 
   handleCopyLink = async () => {
     const { link } = this.state;
@@ -189,45 +333,10 @@ class Rightbar extends React.Component {
     }
   };
 
-  componentDidUpdate(prevProps, prevState) {
-    if (prevProps.selectedImage !== this.props.selectedImage && this.props.selectedImage) {
-      const image = this.props.selectedImage;
-      console.log('Rightbar обновился для изображения:', image);
-      console.log('width:', image.width, 'height:', image.height, 'fileSize:', image.fileSize, 'createdAt:', image.createdAt);
-
-      this.setState({
-        title: image.fileName || '',
-        description: '',
-        link: '',
-        imageProperties: {
-          dimension: image.width && image.height && image.width > 0 && image.height > 0 ? `${image.width} × ${image.height}` : 'Unknown',
-          size: image.fileSize && image.fileSize > 0 ? this.formatFileSize(image.fileSize) : 'Unknown',
-          type: this.getFileType(image.fileName),
-          dataImported: image.createdAt ? new Date(image.createdAt).toLocaleDateString() : 'Unknown'
-        }
-      });
-    } else if (!this.props.selectedImage && prevProps.selectedImage) {
-      // Если изображение снято, сбросить поля
-      this.setState({
-        title: '',
-        description: '',
-        link: '',
-        imageProperties: {
-          dimension: '1920 × 1080',
-          size: '2.4 MB',
-          type: 'JPEG',
-          dataImported: '2024-01-15'
-        }
-      });
-    }
-
-    if (prevState.description !== this.state.description) {
-      this.adjustTextareaHeight();
-    }
-  }
+  // ============= УТИЛИТЫ =============
 
   formatFileSize = (bytes) => {
-    if (bytes === 0) return '0 Bytes';
+    if (!bytes || bytes === 0) return '0 Bytes';
     const k = 1024;
     const sizes = ['Bytes', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
@@ -236,17 +345,58 @@ class Rightbar extends React.Component {
 
   getFileType = (filename) => {
     if (!filename) return 'Unknown';
-    const ext = filename.split('.').pop().toUpperCase();
-    return ext;
+    const ext = getFileExtension(filename);
+    return ext === 'jpeg' ? 'jpg' : ext;
   };
 
-  formatDate = (dateString) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('ru-RU', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric'
-    });
+  adjustTextareaHeight = () => {
+    const textarea = this.textareaRef.current;
+    if (textarea) {
+      textarea.style.height = 'auto';
+      textarea.style.height = textarea.scrollHeight + 'px';
+    }
+  };
+
+  // ============= ДЕЙСТВИЯ С ИЗОБРАЖЕНИЕМ =============
+
+  handleMoveToTrash = () => {
+    const { selectedImage, onMoveToTrash } = this.props;
+    if (selectedImage && onMoveToTrash) {
+      onMoveToTrash(selectedImage.id);
+    }
+  };
+
+  handleRestoreFromTrash = () => {
+    const { selectedImage, onRestoreFromTrash } = this.props;
+    if (selectedImage && onRestoreFromTrash) {
+      onRestoreFromTrash(selectedImage.id, 2); // Восстанавливаем в Uncategorized
+    }
+  };
+
+  handleDeletePermanently = () => {
+    const { selectedImage, onDeletePermanently } = this.props;
+    if (selectedImage && onDeletePermanently) {
+      if (window.confirm('Вы уверены, что хотите окончательно удалить это изображение?')) {
+        onDeletePermanently(selectedImage.id);
+      }
+    }
+  };
+
+  handleExportImage = async () => {
+    const { selectedImage } = this.props;
+    if (!selectedImage || !window.electronAPI?.exportImage) return;
+
+    try {
+      const result = await window.electronAPI.exportImage(selectedImage.id);
+      if (result.success) {
+        alert(`Изображение успешно экспортировано:\n${result.path}`);
+      } else {
+        alert(`Ошибка экспорта: ${result.error || result.message}`);
+      }
+    } catch (error) {
+      console.error('Ошибка экспорта:', error);
+      alert('Ошибка при экспорте изображения');
+    }
   };
 
   render() {
@@ -262,10 +412,10 @@ class Rightbar extends React.Component {
       newFolderName
     } = this.state;
 
-    const { selectedImage } = this.props;
+    const { selectedImage, isTrashFolder } = this.props;
     const currentImagePath = selectedImage ? selectedImage.url : undefined;
 
-    // Папки доступные для добавления (исключая уже выбранные)
+    // Папки доступные для добавления
     const availableToAdd = availableFolders.filter(folder => !selectedFolders.includes(folder));
 
     return (
@@ -273,12 +423,77 @@ class Rightbar extends React.Component {
         <div className="rightbar-content">
           <ImagePreview imagePath={currentImagePath} />
           
+          {/* Секция действий с изображением */}
+          {selectedImage && (
+            <div className="rightbar-section">
+              <label className="rightbar-label">Actions</label>
+              <div className="actions-container">
+                {!isTrashFolder ? (
+                  <>
+                    <button
+                      className="action-button action-button--rename"
+                      onClick={() => document.querySelector('.title-input')?.focus()}
+                      title="Переименовать"
+                    >
+                      <svg className="action-button-icon" viewBox="0 0 24 24" fill="none">
+                        <path d="M17 3a2.828 2.828 0 114 4L7.5 20.5 2 22l1.5-5.5L17 3z" 
+                          stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                      <span>Rename</span>
+                    </button>
+                    <button
+                      className="action-button action-button--delete"
+                      onClick={this.handleMoveToTrash}
+                      title="Удалить в корзину"
+                    >
+                      <svg className="action-button-icon" viewBox="0 0 24 24" fill="none">
+                        <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2M10 11v6M14 11v6" 
+                          stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                      <span>Delete</span>
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <button
+                      className="action-button action-button--restore"
+                      onClick={this.handleRestoreFromTrash}
+                      title="Восстановить из корзины"
+                    >
+                      <svg className="action-button-icon" viewBox="0 0 24 24" fill="none">
+                        <path d="M3 10h10a8 8 0 018 8v2M3 10l6 6M3 10l6-6" 
+                          stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                      <span>Restore</span>
+                    </button>
+                    <button
+                      className="action-button action-button--permanent"
+                      onClick={this.handleDeletePermanently}
+                      title="Удалить навсегда"
+                    >
+                      <svg className="action-button-icon" viewBox="0 0 24 24" fill="none">
+                        <path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" 
+                          stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                      <span>Delete</span>
+                    </button>
+                  </>
+                )}
+              </div>
+            </div>
+          )}
+          
+          {/* Основная информация */}
           <div className="rightbar-section">
             <label className="rightbar-label">Name</label>
             <InputField
               value={title}
               onChange={this.handleTitleChange}
+              onBlur={this.handleTitleBlur}
+              onKeyPress={this.handleTitleKeyPress}
               placeholder="Enter name"
+              className="title-input"
+              disabled={!selectedImage || isTrashFolder} // Блокируем если в корзине
             />
           </div>
           
@@ -289,8 +504,10 @@ class Rightbar extends React.Component {
               className="rightbar-textarea rightbar-textarea--autoexpand"
               value={description}
               onChange={(e) => this.handleDescriptionChange(e.target.value)}
+              onBlur={this.handleDescriptionBlur}
               placeholder="Enter Description"
               rows={3}
+              disabled={!selectedImage || isTrashFolder} // Блокируем если в корзине
             />
           </div>
 
@@ -300,15 +517,17 @@ class Rightbar extends React.Component {
               <InputField
                 value={link}
                 onChange={this.handleLinkChange}
-                placeholder="Enter Link"
+                onBlur={this.handleLinkBlur}
                 onKeyPress={this.handleLinkKeyPress}
+                placeholder="Enter Link"
                 className="link-input"
+                disabled={!selectedImage || isTrashFolder} // Блокируем если в корзине
               />
               <button
                 className={`link-button ${isCopied ? 'link-button--copied' : ''}`}
                 onClick={this.handleCopyLink}
-                disabled={!link.trim()}
-                title={isCopied ? "Ссылка скопирована!" : "Скопировать ссылку в буфер обмена"}
+                disabled={!link.trim() || !selectedImage || isTrashFolder}
+                title={isCopied ? "Ссылка скопирована!" : "Скопировать ссылку"}
                 type="button"
               >
                 {isCopied ? (
@@ -325,11 +544,10 @@ class Rightbar extends React.Component {
             </div>
           </div>
 
-          {/* Секция выбора папок */}
+          {/* Секция папок/тегов */}
           <div className="rightbar-section">
-            <label className="rightbar-label">Folders</label>
+            <label className="rightbar-label">Folders / Tags</label>
             <div className="folders-container" ref={this.folderMenuRef}>
-              {/* Выбранные папки (теги) */}
               <div className="selected-folders">
                 {selectedFolders.map((folder, index) => (
                   <div key={index} className="folder-tag">
@@ -339,6 +557,7 @@ class Rightbar extends React.Component {
                       className="folder-tag__remove"
                       onClick={() => this.removeFolder(folder)}
                       title={`Удалить ${folder}`}
+                      disabled={!selectedImage || isTrashFolder}
                     >
                       <svg className="folder-tag__remove-icon" viewBox="0 0 24 24" fill="none">
                         <path d="M18 6L6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
@@ -348,12 +567,12 @@ class Rightbar extends React.Component {
                   </div>
                 ))}
                 
-                {/* Кнопка добавления */}
                 <button
                   type="button"
                   className="folder-add-button"
                   onClick={this.toggleFolderMenu}
-                  title="Добавить папку"
+                  title="Добавить папку/тег"
+                  disabled={!selectedImage || isTrashFolder}
                 >
                   <svg className="folder-add-button__icon" viewBox="0 0 24 24" fill="none">
                     <path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
@@ -361,31 +580,27 @@ class Rightbar extends React.Component {
                 </button>
               </div>
 
-              {/* Выпадающее меню */}
               {isFolderMenuOpen && (
                 <div className="folder-menu">
-                  
-                  {/* Создание новой папки */}
                   <div className="folder-menu__create">
                     <InputField
                       className="folder-menu__input"
                       value={newFolderName}
                       onChange={this.handleNewFolderNameChange}
                       onKeyPress={this.handleNewFolderKeyPress}
-                      placeholder="Enter Name"
-                      
+                      placeholder="Новый тег"
+                      disabled={!selectedImage || isTrashFolder}
                     />
                     <button
                       type="button"
                       className="folder-menu__create-button"
                       onClick={this.handleCreateFolder}
-                      disabled={!newFolderName.trim()}
+                      disabled={!newFolderName.trim() || !selectedImage || isTrashFolder}
                     >
                       Create
                     </button>
                   </div>
 
-                  {/* Список доступных папок */}
                   <div className="folder-menu__list">
                     {availableToAdd.length > 0 ? (
                       availableToAdd.map((folder, index) => (
@@ -394,17 +609,14 @@ class Rightbar extends React.Component {
                           type="button"
                           className="folder-menu__item"
                           onClick={() => this.addFolder(folder)}
+                          disabled={!selectedImage || isTrashFolder}
                         >
-                          <span className="folder-menu__item-icon">
-                            <FolderIcon className="folder-menu-item__svg" />
-                          </span>
-
                           <span className="folder-menu__item-text">{folder}</span>
                         </button>
                       ))
                     ) : (
                       <div className="folder-menu__empty">
-                        All folders have already been added
+                        Нет доступных тегов
                       </div>
                     )}
                   </div>
@@ -413,7 +625,7 @@ class Rightbar extends React.Component {
             </div>
           </div>
 
-          {/* Секция Properties для изображения */}
+          {/* Свойства изображения */}
           <div className="rightbar-section">
             <label className="rightbar-label">Properties</label>
             <div className="properties-grid">
@@ -430,15 +642,17 @@ class Rightbar extends React.Component {
                 <span className="property-value">{imageProperties.type}</span>
               </div>
               <div className="property-row">
-                <span className="property-label">Data imported</span>
+                <span className="property-label">Imported</span>
                 <span className="property-value">{imageProperties.dataImported}</span>
               </div>
             </div>
           </div>
 
+          {/* Кнопка экспорта */}
           <ExportButton 
-            onClick={() => console.log('Export clicked')}
+            onClick={this.handleExportImage}
             label="Export image"
+            disabled={!selectedImage}
           />
         </div>
       </div>

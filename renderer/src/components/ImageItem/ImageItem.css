@@ -1,0 +1,236 @@
+.image-item {
+  position: relative;
+  border-radius: 8px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background-color: #1a1a1a;
+  border: 2px solid transparent;
+}
+
+.image-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.image-item.selected {
+  border-color: #007bff;
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.3);
+}
+
+.image-item-image-container {
+  position: relative;
+  width: 100%;
+  padding-bottom: 100%; /* Квадратное соотношение */
+  overflow: hidden;
+}
+
+.image-item-image {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.image-item-error {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background-color: #2a2a2a;
+  color: #888;
+}
+
+.image-item-error svg {
+  width: 48px;
+  height: 48px;
+  margin-bottom: 8px;
+  color: #666;
+}
+
+.image-item-selection {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  z-index: 2;
+}
+
+.selection-checkbox {
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  background-color: #007bff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.selection-checkbox svg {
+  width: 12px;
+  height: 12px;
+}
+
+.image-item-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(transparent, rgba(0, 0, 0, 0.9));
+  padding: 12px 8px 8px;
+  color: white;
+  font-size: 11px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  pointer-events: none;
+}
+
+.image-item-info {
+  flex: 1;
+  overflow: hidden;
+  pointer-events: auto;
+}
+
+.image-item-name {
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-bottom: 2px;
+}
+
+.image-item-deleted-date {
+  display: block;
+  font-size: 9px;
+  color: #aaa;
+}
+
+.image-item-actions {
+  display: flex;
+  gap: 4px;
+  pointer-events: auto;
+}
+
+.image-item-action-btn {
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  background-color: rgba(255, 255, 255, 0.1);
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.image-item-action-btn:hover {
+  transform: scale(1.1);
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.image-item-action-btn svg {
+  width: 12px;
+  height: 12px;
+}
+
+.image-item-action-btn--delete svg {
+  color: #dc3545;
+}
+
+.image-item-action-btn--restore svg {
+  color: #28a745;
+}
+
+.image-item-action-btn--permanent svg {
+  color: #ff6b6b;
+}
+
+/* Добавляем в ImageItem.css */
+
+.image-item-image {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: opacity 0.3s ease;
+}
+
+.image-item-image.loading {
+  opacity: 0;
+}
+
+.image-item-image.loaded {
+  opacity: 1;
+}
+
+.image-item-placeholder {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background-color: #2a2a2a;
+  color: #666;
+}
+
+.image-item-placeholder svg {
+  width: 48px;
+  height: 48px;
+  margin-bottom: 8px;
+  color: #444;
+}
+
+.thumbnail-badge {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  background-color: rgba(0, 123, 255, 0.9);
+  border-radius: 3px;
+  padding: 2px;
+  z-index: 2;
+}
+
+.thumbnail-badge svg {
+  width: 12px;
+  height: 12px;
+  color: white;
+}
+
+.image-item-loading {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(26, 26, 26, 0.8);
+}
+
+.loading-spinner-small {
+  width: 20px;
+  height: 20px;
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+  border-top-color: #007bff;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}

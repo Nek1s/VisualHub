@@ -1,4 +1,3 @@
-// src/main/db/database.js
 const Database = require('better-sqlite3');
 const path = require('path');
 const fs = require('fs');
@@ -16,6 +15,7 @@ if (!fs.existsSync(dataDir)) {
 const db = new Database(dbPath);
 db.pragma('foreign_keys = ON');
 
+// Создаем таблицу folders
 db.prepare(`
 CREATE TABLE IF NOT EXISTS folders (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -25,6 +25,7 @@ CREATE TABLE IF NOT EXISTS folders (
 )
 `).run();
 
+// Создаем таблицу images с ВСЕМИ колонками
 db.prepare(`
 CREATE TABLE IF NOT EXISTS images (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -41,6 +42,43 @@ CREATE TABLE IF NOT EXISTS images (
 )
 `).run();
 
+// Проверяем и добавляем отсутствующие колонки
+const checkAndAddColumns = () => {
+  const columns = db.prepare("PRAGMA table_info(images)").all();
+  const columnNames = columns.map(col => col.name);
+  
+  console.log('Существующие колонки в images:', columnNames);
+  
+  // Список необходимых колонок
+  const requiredColumns = [
+    { name: 'width', type: 'INTEGER DEFAULT 0' },
+    { name: 'height', type: 'INTEGER DEFAULT 0' },
+    { name: 'fileSize', type: 'INTEGER DEFAULT 0' },
+    { name: 'thumbnailPath', type: 'TEXT' },
+    { name: 'title', type: 'TEXT' }, // Добавляем title
+    { name: 'description', type: 'TEXT' }, // Добавляем description
+    { name: 'link', type: 'TEXT' }, // Добавляем link
+    { name: 'createdAt', type: 'TEXT DEFAULT CURRENT_TIMESTAMP' },
+    { name: 'modifiedAt', type: 'TEXT DEFAULT CURRENT_TIMESTAMP' }
+  ];
+  
+  for (const column of requiredColumns) {
+    if (!columnNames.includes(column.name)) {
+      console.log(`Добавляем колонку ${column.name} в таблицу images`);
+      try {
+        db.prepare(`ALTER TABLE images ADD COLUMN ${column.name} ${column.type}`).run();
+        console.log(`✅ Колонка ${column.name} добавлена`);
+      } catch (error) {
+        console.error(`❌ Ошибка добавления колонки ${column.name}:`, error.message);
+      }
+    }
+  }
+};
+
+// Вызываем проверку колонок
+checkAndAddColumns();
+
+// Создаем остальные таблицы
 db.prepare(`
 CREATE TABLE IF NOT EXISTS tags (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -58,15 +96,22 @@ CREATE TABLE IF NOT EXISTS image_tags (
 )
 `).run();
 
+// Вставляем системные папки
 db.prepare(`
   INSERT OR IGNORE INTO folders (id, name) VALUES
   (1, 'All'), (2, 'Uncategorized'), (3, 'Trash')
 `).run();
 
-// Обновить существующие записи без createdAt
-db.prepare(`
-  UPDATE images SET createdAt = datetime('now'), modifiedAt = datetime('now')
-  WHERE createdAt IS NULL OR createdAt = ''
-`).run();
+// Обновляем существующие записи без createdAt и modifiedAt
+try {
+  db.prepare(`
+    UPDATE images SET createdAt = datetime('now'), modifiedAt = datetime('now')
+    WHERE createdAt IS NULL OR createdAt = ''
+  `).run();
+} catch (error) {
+  console.warn('Ошибка обновления дат:', error.message);
+}
+
+console.log('✅ База данных инициализирована');
 
 module.exports = db;
